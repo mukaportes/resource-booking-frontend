@@ -261,3 +261,12 @@
 .agenda-booking .status-badge {
   justify-self: start;
 }
+
+.agenda-booking[data-status='cancelled'] {
+  background: var(--subtle-surface);
+  color: var(--muted-foreground);
+}
+.agenda-booking[data-status='cancelled'] strong,
+.agenda-booking[data-status='cancelled'] [id^='agenda-time-'] {
+  text-decoration: line-through;
+}

@@ -534,6 +534,19 @@ test('the shared week shows readable bounded entries, preserves filters and open
   await expect(
     page.getByRole('button', { name: 'Details for booking 1', exact: true }),
   ).toHaveCount(0);
+  await page.getByLabel('Show cancelled', { exact: true }).check();
+  await expect(entry).toContainText('Cancelled');
+  await expect(entry).toHaveAttribute('data-status', 'cancelled');
+  await expect(entry.locator('strong')).toHaveCSS(
+    'text-decoration-line',
+    'line-through',
+  );
+  await accessible(page);
+  await page.screenshot({
+    path: 'docs/m06-final-evidence/shared-week-cancelled-mobile.png',
+    fullPage: true,
+  });
+  await page.getByLabel('Show cancelled', { exact: true }).uncheck();
   await page.getByRole('button', { name: /Room 2 Rooms/ }).click();
   await expect(
     page.getByRole('heading', { name: 'Shared week overview' }),

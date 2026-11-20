@@ -38,6 +38,7 @@ export function BookingAgenda({
             <Button
               variant="outline"
               className="agenda-booking"
+              data-status={booking.status}
               onClick={() => onBooking(booking)}
               aria-label={`Details for booking ${booking.id}`}
               aria-describedby={`agenda-resource-${booking.id} agenda-owner-${booking.id} agenda-time-${booking.id} agenda-status-${booking.id}`}
