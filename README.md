@@ -36,7 +36,7 @@ npm run test:e2e
 - `src/ui`: Atlas components, hooks, FullCalendar Standard day/week grid, URL filters and accessible Radix dialogs.
 - `src/app`: Next.js shell and error boundaries.
 
-The domain uses numeric UTC epoch milliseconds and half-open intervals `[startAt, endAt)`. Local dates and times are converted only in the UI. Every write re-reads storage; availability shown in the form is advisory and creation re-checks conflicts. Records are soft-cancelled and retain their IDs.
+The domain uses numeric UTC epoch milliseconds and half-open intervals `[startAt, endAt)`. Local dates and times are converted only in the UI. Every command compares current raw storage values before reusing a validated snapshot; availability shown in the form is advisory and creation re-checks conflicts. Records are soft-cancelled and retain their IDs.
 
 The async repository ports permit a future API implementation. This MVP implements no server, real authentication or cross-tab locking; future server rules must be enforced at the server boundary.
 
@@ -63,20 +63,25 @@ Additional tests cover validation ordering, conflict sorting, malformed storage,
 
 ## Decisions and limitations
 
-- UTC numeric timestamps preserve the challenge’s plain-number domain while the calendar displays the browser locale and time zone.
+- All timestamps are numeric UTC epoch milliseconds. Local form values must round-trip exactly; nonexistent local times are rejected with the draft preserved. Repeated hours use the browser’s native resolution; the form and details show the resolved local UTC offset. No timezone configuration is stored.
 - A separate persisted monotonic sequence preserves IDs through cancellation and reloads. Successful local booking+sequence writes are committed synchronously with rollback if the second write fails. Rollback failure is reported as corruption requiring recovery, never as success.
 - Fake email identity and per-browser data are deliberate MVP constraints. Anyone can identify as another email; there is no security boundary between users sharing a browser.
-- localStorage cannot guarantee concurrency across tabs/devices. A storage event refreshes other tabs and warns when a dialog is open.
+- localStorage cannot guarantee concurrency across tabs/devices. Local mutations and external storage events refresh advisory availability; commit-time conflict validation remains authoritative. A storage event warns when a dialog is open.
 - Epoch-aligned half-hour slots have a known display limitation in time zones with 45-minute offsets.
-- Resource history is retained without a maximum duration or automatic cleanup. The MVP scans the local dataset; large history/performance and production authentication belong to the backend roadmap.
+- Resource history is retained without automatic cleanup. A validated snapshot is reused until raw storage changes, calendar input is limited to the visible interval, and list history uses 50-row pages. The measured local evaluation budget is 5,000 retained bookings, 100 users and 1 MiB of serialized UTF-8 envelope values on the tested desktop. Larger histories, dense calendars and slower devices remain uncharacterized. See [M06 measurements](docs/M06-acceptance.md); first reads after changes and commits still process history synchronously.
+- Damaged tab sessions recover independently of healthy persistent history; the original invalid session remains exportable in memory until reload. Persistent corruption still requires explicit export/reset with typed confirmation. Readable storage with exhausted quota opens a read-only/export workspace, including without an active session; editing resumes only after both storage probes succeed. Allow site data for actual access-denied failures.
+- New booking uses the viewed future date at local 09:00, rounded to the epoch grid; today uses the next slot calculated when pressed. Past-day entry is explained and disabled.
+- Unexpected operation/render failures retain sanitized type, operation and safe stack locations in the local console under the same reference as Copy details. Arbitrary exception messages and booking/identity payloads are omitted. A remote diagnostic sink remains future work.
 - There is no automatic migration from local demo data to a future backend.
 
 ## Delivery and AI use
 
-Milestones M01–M05 follow PRD §17 with one branch and PR per milestone. Dependent PRs are stacked in order toward main; none are merged automatically. The progress tracker records actual verification and PR links.
+Milestones M01–M06 follow PRD §17 with one branch and PR per milestone. Dependent PRs are stacked in order toward main; none are merged automatically. The progress tracker records actual verification and PR links.
 
 AI agents implemented the domain, persistence/application layer, and UI in parallel against the PRD and shared contracts. Changes were integrated, typechecked, linted, exercised through rule and UI tests, and compared visually with the selected preview. Generated code was reviewed against the storage, ownership and dependency contracts. Automated accessibility checks are evidence for their tested states, not a claim of complete WCAG certification.
 
 Time spent: approximately 45 minutes elapsed, including verification and the repair-authorization pause. Final verification evidence is recorded in the progress tracker. Backend, deployment and production operational acceptance are outside this MVP.
 
-Verification: typecheck, lint, production build, 55 unit/integration tests and all seven Chromium scenarios passed. See [MVP progress](docs/MVP-progress.md) for final PR/CI status and [acceptance evidence](docs/MVP-acceptance.md) for scope and limits.
+M06 verification: typecheck, lint, production build, 65 unit/integration/component tests and all 14 Chromium scenarios passed. See [MVP progress](docs/MVP-progress.md) for final PR/CI status and [acceptance evidence](docs/MVP-acceptance.md) for scope and limits.
+
+Product documentation, design previews and audit evidence live in `docs/`. This directory is outside the application source and public assets, excluded from Next.js production file tracing, and skipped by TypeScript, ESLint and Prettier. Keep documentation imports out of application code so these artifacts remain outside browser bundles.

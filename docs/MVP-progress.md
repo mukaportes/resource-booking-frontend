@@ -2,7 +2,7 @@
 
 Source: [PRD-resource-booking.md](PRD-resource-booking.md), §17. UI: [Resource Atlas, option 04](UI-resource-atlas.md).
 
-Updated: 2026-11-20. Delivery means implemented, verified and published for review; deployment is outside scope. Native GitHub stack **#6** contains the milestone PRs and lands on `main`.
+Updated: 2026-11-20. Delivery means implemented, verified and published for review; deployment is outside scope. M01–M05 were delivered through native GitHub stack **#6** and are now merged into `main`. M06 targets `main` after M05.
 
 | Code | Milestone                                   | Status                         | Branch                       | Dependency | PR                                                                   | Verification                                                             |
 | ---- | ------------------------------------------- | ------------------------------ | ---------------------------- | ---------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -10,7 +10,8 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 | M02  | Storage adapter, repositories and use cases | Complete — merged              | `feat/M02-storage-use-cases` | M01        | [#2](https://github.com/mukaportes/resource-booking-frontend/pull/2) | 41 tests; typecheck/lint; GitHub CI passed                               |
 | M03  | Login, session, app shell and toasts        | Complete — merged              | `feat/M03-session-app-shell` | M02        | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed    |
 | M04  | Calendar, filters, booking modals and list  | Complete — merged              | `feat/M04-booking-workspace` | M03        | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed                         |
-| M05  | Accessibility, resilience, README and demo  | Complete — PR ready for review | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; GitHub CI passed |
+| M05  | Accessibility, resilience, README and demo  | Complete — merged | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; GitHub CI passed |
+| M06 | Audit remediation — 1 Blocker + 6 Majors | Verified — publication pending | `fix/M06-audit-remediation` | M05 | Pending | 65 tests; 14/14 production Chromium scenarios; typecheck/lint/build; measured history budget |
 
 ## Acceptance and delivery
 
@@ -19,9 +20,10 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 - M03: FR-U1–U6, gated empty shell, Atlas primitives, feedback and typed storage recovery.
 - M04: FR-A/B/C/L, day/week FullCalendar, shared URL filters, create/details/cancel workflows and list history.
 - M05: challenge README/demo, route/root error boundaries, contrast, browser CI and keyboard/mobile acceptance.
+- M06: all seven original findings are resolved under PRD §17.1; [per-finding reassessment and measured evidence](M06-acceptance.md). Store every timestamp as UTC epoch milliseconds and display browser-local time; no timezone configuration or custom timezone engine. The focused reassessment covers all seven findings; it does not assign a broader excellence score.
 - Dependent PRs form a native GitHub stack rooted at `main`; the stack retargets as lower layers merge. M01–M04 were merged on GitHub during delivery; the agent did not merge them.
 
-## Final verification
+## M01–M05 verification (historical)
 
 - `npm run typecheck`: passed.
 - `npm run lint`: passed with zero warnings.
@@ -41,3 +43,13 @@ The front-end MVP retains the PRD's fake identity, per-browser storage and multi
 Time spent: approximately 45 minutes elapsed, including verification and the repair-authorization pause. No deployment was performed.
 
 UI evidence: [Desktop Atlas capture](mvp-resource-atlas-desktop.png) · [360 px Atlas capture](mvp-resource-atlas-mobile.png).
+
+## M06 verification and delivery
+
+- Based on `main` at `f04f87e`, containing merged M05. Original PRD/progress planning edits were preserved. During execution the user confirmed repository `docs/` as the canonical location after the separate shared directory was moved; documentation-exclusion configuration was preserved. No second documentation tree is recreated.
+- Reproduced original browser defects against the M05 production build; reproduced full-history cost at 100/1,000/5,000 records and the missing diagnostic cause with a failing regression.
+- Typecheck and lint pass. 65 unit/integration/component tests pass across nine files; numeric domain rules remain unchanged. Production build passes. 14/14 Chromium scenarios pass against the production server, including the seven historical scenarios.
+- New behavioral regressions cover local/DST-to-UTC persistence and reload, session-only recovery, readable startup quota versus access denial, date-context defaults, local/external availability revision changes, submission-conflict reconciliation, bounded history/visible-range events and both copied diagnostic references.
+- Populated desktop/360 px, keyboard/focus and relevant axe states were rechecked. No serious/critical axe issues were reported in the exercised states; this is not a full accessibility certification.
+- At 5,000 bookings / 100 users / 903,480 serialized UTF-8 bytes, median list load changed from 882.2 to 53.3 ms and ID-sort interaction from 513.4 to 32.6 ms; rendered history changed from 5,000 to at most 50 rows. Three samples per fixture per revision; exact samples and limitations are in [M06 acceptance](M06-acceptance.md). No CI timing threshold was introduced.
+- All seven original findings are reassessed as resolved within the browser-only scope. No merge, deployment, production authentication, cross-tab locking or remote monitoring was performed. Publication/CI status will be updated with the review PR.

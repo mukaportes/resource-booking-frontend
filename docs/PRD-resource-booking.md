@@ -334,8 +334,8 @@ Toasts use an ARIA live region (`polite` for success/info, `assertive` for error
 ### 8.3 Storage resilience
 
 - All storage access goes through one storage adapter wrapped in `try/catch`. No component touches `localStorage` directly.
-- On startup the adapter checks that storage is available (write/read/remove a probe key). If it fails: blocking modal with `STORAGE_UNAVAILABLE` and guidance (disable private mode or allow site data).
-- Every read is validated with Zod. On failure: `STORAGE_CORRUPTED` recovery modal with two choices: **Export raw data** (downloads the JSON) and **Reset local data** (requires a typed confirmation). The app never silently replaces user data.
+- On startup the adapter checks storage (write/read/remove a probe key). Access denial maps to `STORAGE_UNAVAILABLE` with blocking guidance. Quota exhaustion remains `STORAGE_QUOTA_EXCEEDED`; when reads succeed, offer read-only access and raw export rather than claiming storage is disabled (M6, §17.1).
+- Every read is validated with Zod. Invalid persistent data opens `STORAGE_CORRUPTED` recovery with **Export raw data** and **Reset local data** (typed confirmation). Invalid tab-session data instead recovers only that session and requests identification, preserving healthy users, bookings and sequence (M6, §17.1). The app never silently replaces persistent user data.
 - Writes are all-or-nothing from the user's point of view (§10.3). Quota errors leave the previous state intact.
 
 ### 8.4 Unexpected errors
@@ -409,7 +409,7 @@ Details: ID, resource, owner email, local start/end, status badge, created at. T
 
 - Stored and computed values are UTC epoch milliseconds.
 - Display uses `Intl.DateTimeFormat(undefined, …)`, so the browser's locale and local time zone decide the format.
-- Conversion between local selections and UTC epochs happens only in the UI adapter (`toEpochMs` / `formatRange`), never in the domain.
+- Conversion between local selections and UTC epochs happens only in the UI adapter (`toEpochMs` / `formatRange`), never in the domain. ALWAYS store timestamps in UTC; display them in browser-local time. M6 adds round-trip validation against silent input normalization, without timezone configuration or a custom timezone engine (§17.1).
 - The 30-minute grid is evaluated on the epoch value (`startAt % 1_800_000 === 0`). This is correct for every time zone whose offset is a multiple of 30 minutes. Zones with 45-minute offsets (for example Nepal) are a known limitation (§14).
 
 ---
@@ -636,3 +636,56 @@ All four questions were answered by the product owner on 2026-11-20.
 | M3 | Login, session, app shell, toasts | FR-U1 to FR-U6 |
 | M4 | Calendar, filter, create/details/cancel modals, list view | FR-A, FR-B, FR-C, FR-L |
 | M5 | Polish: accessibility, empty/error states, README, demo script | §12 checklist complete |
+| M6 | Audit remediation: correctness, recovery, booking context, performance and diagnostics | One Blocker and six Majors resolved with §17.1 evidence; all required checks pass |
+
+### 17.1 M6 — Audit remediation and acceptance
+
+**Status:** Implemented and verified; publication for review recorded in [MVP progress](MVP-progress.md). All seven original findings are resolved within the measured browser-only scope; see [M06 acceptance](M06-acceptance.md).
+
+**Dependency:** M5 implementation.
+
+**Branch:** `fix/M06-audit-remediation`, based on `main` containing merged M05.
+
+**Source:** [Excellence Bar Audit — booking app](Excellence-Bar-Audit-booking-app.md), November 20, 2026.
+
+**Goal:** Resolve the audit's one Blocker and six Majors, with focused regression evidence for each. Preserve the front-end-only challenge scope and existing booking rules.
+
+#### Time contract and scope
+
+- ALWAYS persist timestamps as numeric UTC epoch milliseconds, including booking start/end, creation and cancellation timestamps. Domain comparisons, overlap checks and repository contracts continue to operate on these numbers.
+- Display dates and times in the browser's local time. Convert local form/calendar selections to UTC exactly once at the UI boundary; do not store formatted local strings or apply an offset a second time.
+- Timezone configuration, timezone selection, stored timezone identifiers and a custom timezone engine are outside this milestone. The challenge's plain-number domain remains unchanged.
+- Address the audit's time-shift blocker with a narrow input-integrity guard: round-trip converted values to the original local fields and reject values the browser silently normalizes, preserving the draft and explaining the invalid local time. No silent substitution of another booking time.
+- For repeated local times, retain the browser's native resolution and show the resolved instant with its local UTC offset when ambiguity matters; do not build a timezone/disambiguation picker. Include a fall-back conversion regression so UTC persistence and displayed local time stay consistent.
+- Keep the existing epoch-aligned 30-minute grid and documented 45-minute-offset limitation. Expanding timezone support is not an acceptance condition for M6.
+
+#### Work packages and exit criteria
+
+| ID | Audit finding | Planned change | Acceptance evidence |
+|---|---|---|---|
+| M06-01 | Blocker — silently shifted local time | Add the UI conversion/round-trip guard under the time contract above; keep all persisted timestamps UTC. | A valid local interval persists the expected UTC epoch and displays back in local time after reload. The reproduced New York spring-forward `02:00–02:30` is rejected inline, keeps the fields, and writes nothing and consumes no ID. A fall-back case verifies the documented native resolution and offset display. Existing numeric domain tests remain unchanged in meaning. |
+| M06-02 | Major — damaged session drives full reset | Separate tab-session corruption from persistent users/bookings corruption. Preserve diagnostic/export evidence, clear only the invalid session and return to identification with an explanation. | With healthy bookings and malformed session data, re-identification works while users, bookings and sequence remain byte-for-byte unchanged. Persistent-data corruption still requires explicit recovery and typed confirmation for full reset. |
+| M06-03 | Major — startup quota misclassified | Distinguish quota exhaustion from denied storage access during probing. Provide read-only access and raw export when data remains readable, with a capacity explanation and safe recovery/retry. | Inject a startup `QuotaExceededError`: existing bookings can be inspected/exported, mutations are disabled until writable storage is confirmed, and no data is changed. A genuine access-denied failure retains its blocking explanation. Existing commit rollback checks still pass. |
+| M06-04 | Major — New booking ignores viewed date | Derive default booking date from the schedule context; use the next valid slot for today and a valid local slot on a viewed future day. Explain the past-date policy instead of silently switching dates. | Keyboard/button entry from a future viewed day prefills that day and the focused resource; today never defaults to a past start. Past-day behavior is explicit. UTC serialization follows M06-01. |
+| M06-05 | Major — stale live availability | Invalidate/recheck availability on local mutations and external data revisions; reconcile submission conflicts without requiring an unrelated field edit. | Another tab occupying a draft interval updates the conflict panel; freeing it restores availability and enables submission without reopening/editing the draft. Commit-time conflict validation remains authoritative. No cross-tab locking guarantee is added. |
+| M06-06 | Major — repeated full-history work | Reuse validated snapshots per data revision, index ownership lookup, limit calendar input to the visible interval, and bound history rendering with pagination or virtualization. Define a supported local-history budget using measured production-build behavior. | Record before/after measurements on the same browser/device and explicit fixture sizes, including cancelled history and multiple users. Document the supported record/byte budget and measured interaction costs. Verify bounded rendered history, correct visible-range events, revision invalidation and unchanged retained records/sequence. Timing evidence is measured, not a flaky CI wall-clock threshold. |
+| M06-07 | Major — diagnostic causes lost | Preserve sanitized exception type/stack and operation context; use one correlation ID across the diagnostic event and copied user reference. Pass boundary exceptions into this layer. | Inject an unexpected operation failure and a render-boundary failure: each copied reference matches a useful diagnostic event, without owner emails or booking payloads. Keep the local logger seam; a remote monitoring service is not required. |
+
+#### Execution order and completion gate
+
+1. Implement M06-01 first, then M06-02 and M06-03 to repair correctness and safe recovery.
+2. Implement M06-04 and M06-05 to repair the booking journey, then M06-06 and M06-07 for performance and diagnosability.
+3. Run focused regressions for all seven packages, then typecheck, lint, unit/integration tests, production build and Chromium acceptance. Browser coverage must include UTC/local round trips, an injected startup quota failure, session-only recovery, external availability changes and future-date booking entry.
+4. Recheck populated desktop and 360 px views, keyboard/focus paths and relevant axe states. Update the README limitations, acceptance evidence and this progress tracker with actual outcomes; retain historical M01–M05 results.
+5. Re-audit the seven findings and record resolved/open status with evidence. M6 is complete only when all seven findings are resolved and required checks pass. A 4+ excellence score requires reassessment, not just passing tests. Publish for review under the existing milestone delivery convention; no automatic merge or deployment.
+
+**Planning estimate:** M–L overall (roughly one to two engineering weeks, including regression checks and the history benchmark); revise after the performance baseline. Backend, real authentication, deployment, remote monitoring and cross-tab transaction guarantees remain outside this milestone.
+
+#### M6 implemented policies and evidence
+
+- New booking preserves a viewed future day and focused resource, defaulting to local 09:00 rounded to the existing epoch grid. Today rounds the current instant forward at click time; past dates are explicitly disabled. No automatic switch to another viewed date occurs.
+- Probe quota failures permit inspection and export when all persistent reads validate, including without a session. Create/cancel/identity/reset mutations remain disabled until both local and session storage probes succeed. Session recovery preserves invalid raw session data in memory for export until reload; persistent history is not rewritten.
+- Availability is keyed by a refreshed data revision after local changes or external storage events. Submission conflicts initiate refresh and yield to the new advisory result; the draft is retained.
+- Snapshot reuse compares raw storage values on every read, including commit-time reads. Ownership validation uses a Set, calendar input overlaps only the visible local interval and list history uses 50-row pages. No retained record or sequence is truncated.
+- The supported local evaluation envelope is 5,000 bookings, 100 users and 1 MiB total serialized UTF-8 envelope values on the measured desktop configuration. Larger history/dense calendars/slower devices remain unmeasured. Detailed fixture, raw samples and interaction timings are in [M06 acceptance](M06-acceptance.md); CI has no timing threshold.
+- Diagnostics omit arbitrary messages and retain safe type/stack locations plus fixed operation context. The diagnostic event, returned error and copied reference share one correlation ID; the sink remains local console output.

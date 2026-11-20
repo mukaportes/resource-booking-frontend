@@ -22,8 +22,12 @@ The scope is the front-end MVP in PRD §17, using Resource Atlas option 04. Back
 
 Browser acceptance runs in Chromium. Automated axe checks cover exercised login/workspace/mobile states and do not certify every WCAG criterion. Keyboard paths, modal focus, 360 px overflow and drag selection are exercised separately. Local storage has the documented browser/tab and concurrency limitations; this is not production authentication or backend acceptance.
 
-## Final browser evidence
+## M01–M05 browser evidence (historical)
 
 All seven Chromium scenarios passed on 2026-11-20, including native keyboard scrolling through a focusable day grid cell and Enter/Space booking details with focus restoration. Login, empty mobile calendar and populated calendar axe scans reported no serious/critical findings. Typecheck, lint, 55 unit/integration tests and the production build passed. The progress tracker records final publication/CI state.
 
 Implementation CI passed: [run 44728628284](https://github.com/mukaportes/resource-booking-frontend/actions/runs/44728628284). Visual evidence: [desktop](mvp-resource-atlas-desktop.png) and [360 px](mvp-resource-atlas-mobile.png).
+
+## M06 remediation acceptance
+
+All seven audit findings are reassessed as resolved within PRD §17.1's browser-only scope. [M06 acceptance](M06-acceptance.md) records the reproduced failures, per-finding regression evidence, measured history budget and limitations. Current verification: 65 tests across nine files, typecheck/lint/build and 14 Chromium scenarios pass. Added axe states include invalid local-time input and quota read-only recovery. No excellence-bar score, merge, deployment or production operational acceptance is inferred.

@@ -6,6 +6,7 @@ export default defineConfig([
   ...nextTypescript,
   { rules: { '@typescript-eslint/no-explicit-any': 'error' } },
   globalIgnores([
+    'docs/**',
     '.next/**',
     'out/**',
     'coverage/**',
