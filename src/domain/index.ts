@@ -3,3 +3,4 @@ export * from './errors';
 export * from './resources';
 export * from './validation';
 export * from './bookings';
+export * from './repositories';
