@@ -1,0 +1,11 @@
+{
+  "revision": "c5390f9af74614393eb957ebc93ae28f93d48bf6",
+  "queryMutationChangedStorage": false,
+  "cancelSucceeded": false,
+  "cancellationError": "NOT_BOOKING_OWNER",
+  "commandChangedStorage": false,
+  "originalOwner": "owner@example.com",
+  "persistedOwnerIsOriginal": true,
+  "persistedOwnerIsOther": false,
+  "persistedStatus": "active"
+}

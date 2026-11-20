@@ -144,7 +144,7 @@ Order of checks for cancellation: session → booking exists → ownership → s
 
 | ID | Requirement |
 |---|---|
-| FR-L1 | The calendar shows active bookings for the visible date range. A "Show cancelled" toggle also renders cancelled bookings, visually muted with strikethrough. |
+| FR-L1 | The schedule shows active bookings for the visible date range. A "Show cancelled" toggle also renders cancelled bookings, visually muted with strikethrough. Shared weeks with multiple resources use a readable, time-sorted agenda with 10 entries per page; a single resource retains the week time grid. Day grids and 50-row global history remain available. |
 | FR-L2 | A list view shows bookings in a table: ID, resource, owner email, local start, local end, status badge, actions. Scopes: "All bookings" and "My bookings". Default sort: `startAt` ascending; sortable by ID. |
 | FR-L3 | A resource multi-select filter (grouped by Rooms / Equipment, with "Select all" and "Clear") applies to both calendar and list. An empty selection shows an empty state with a "Select all resources" action, never a blank grid without explanation. |
 | FR-L4 | Filter and view state are kept in the URL (`?view=week&date=2026-11-20&resources=room-1,tablet-2&showCancelled=1`) so reloads and shared links restore them. Unknown resource IDs in the URL are dropped with a warning toast. |
@@ -640,7 +640,7 @@ All four questions were answered by the product owner on 2026-11-20.
 
 ### 17.1 M6 — Audit remediation and acceptance
 
-**Status:** Implemented and CI-verified, but not complete. The [post-CI excellence-bar audit](Excellence-Bar-Reaudit-M06.md) reopens M06-06 because mutable query results can alter cached trusted records used by commands. See [MVP progress](MVP-progress.md), [M06 acceptance](M06-acceptance.md) and [PR #7](https://github.com/mukaportes/resource-booking-frontend/pull/7).
+**Status:** Complete — all seven packages and all four follow-up findings resolved; local checks and repair-source CI pass, with PR #7 published for review. [MVP progress](MVP-progress.md) records current-head CI and evidence. See [final reassessment](Excellence-Bar-Final-M06.md), [M06 acceptance](M06-acceptance.md) and [PR #7](https://github.com/mukaportes/resource-booking-frontend/pull/7).
 
 **Dependency:** M5 implementation.
 
@@ -690,6 +690,12 @@ All four questions were answered by the product owner on 2026-11-20.
 - The supported local evaluation envelope is 5,000 bookings, 100 users and 1 MiB total serialized UTF-8 envelope values on the measured desktop configuration. Larger history/dense calendars/slower devices remain unmeasured. Detailed fixture, raw samples and interaction timings are in [M06 acceptance](M06-acceptance.md); CI has no timing threshold.
 - Diagnostics omit arbitrary messages and retain safe type/stack locations plus fixed operation context. The diagnostic event, returned error and copied reference share one correlation ID; the sink remains local console output.
 
-#### Post-CI reassessment
+#### Post-CI reassessment (historical, before authorized follow-up repairs)
 
 The fresh excellence-bar audit found a cache-isolation regression: callers can mutate returned booking objects while raw storage remains unchanged, and a later cancellation trusts that cached owner. M06-06 must isolate validated records from query consumers and prove ownership/record/ID preservation before M6 can be marked complete. The report also records a shared-week readability Major and field-association/date-picker Minors. The acceptance criteria above are unchanged; passing CI alone does not close these findings.
+
+#### Authorized follow-up repair closure
+
+The user authorized one additional targeted cycle for all four post-CI findings. Cached snapshots/records/arrays are frozen privately and outward models are detached, including identity, list/detail, availability, rejected-creation conflicts and idempotent cancellation. Mutating returned records cannot affect trusted ownership, persisted bytes or ID allocation. Shared weeks with multiple selected resources use the existing Atlas visual language in a 10-entry paginated agenda; choosing one resource restores its native week grid. Date/mine/resource/cancelled filters apply before paging. Cancelled entries retain status/muting/strikethrough; keyboard details restore focus, with a schedule-heading fallback when cancellation removes the trigger. Form errors use explicit field labels and specific description IDs. The picker opens/reopens on the viewed month.
+
+All seven original packages and all four follow-up findings are reassessed as resolved in [final focused audit](Excellence-Bar-Final-M06.md). Repair-source CI passed and the milestone is published for review in PR #7. Current documentation-head checks are visible on the PR; no merge/deployment is authorized.

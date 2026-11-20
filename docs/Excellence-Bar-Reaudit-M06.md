@@ -1,5 +1,8 @@
 # Excellence Bar Audit — Alvorada / spaces, after M06
 
+> Historical assessment before the authorized repairs. The [final focused reassessment](Excellence-Bar-Final-M06.md) closes all four findings and passes within the browser-only MVP scope.
+
+
 **Sources:** codebase, including local PRD, design contract, README and acceptance evidence; no Confluence sources.  
 **Verdict: CONDITIONAL**
 
@@ -90,3 +93,7 @@ npm audit --omit=dev --json
 ```
 
 The cache probe intentionally records the current failure, so its passing result means the defect was reproduced; it is audit evidence, not a new acceptance test. Its module and all audit scripts live in documentation, outside the application test suite and production artifacts. No source repair, merge or deployment occurred after the passing implementation CI during this audit.
+
+## Latest focused reassessment after authorized repairs
+
+The user authorized one additional repair cycle for all four follow-up findings. The [final M06 reassessment](Excellence-Bar-Final-M06.md) closes them, restores M06-06's ownership/record-preservation gate and scores 4/4/4 within the browser-only MVP scope. This document's earlier verdict, findings and evidence are retained as history. Required final CI/publication status is recorded in [MVP progress](MVP-progress.md); no merge or deployment occurred.

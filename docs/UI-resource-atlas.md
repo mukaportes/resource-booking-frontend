@@ -83,3 +83,7 @@ No animation, chart, mapping, card-carousel, or paid scheduler library is needed
 - Calendar behavior includes full-day scrolling, drag and keyboard entry paths, overlapping-resource events, and past-slot restrictions; demo limitations are not inherited as requirements.
 - Loading, empty selection, empty date range, invalid/conflicting booking, non-owner details, cancellation, and storage failure/recovery states are covered.
 - Verify contrast, keyboard/focus behavior, narrow viewports, and reduced-motion preferences using the real production components before declaring accessibility complete.
+
+## M06 shared-week refinement
+
+With multiple resources selected, Week presents a time-sorted agenda with ten entries per page. Each full-width Atlas button shows resource/ID, owner, browser-local interval with offset and status; long labels wrap at 360 px. Selecting one resource restores its native week time grid. Existing date/resource/mine/cancelled filters apply before paging. Show cancelled retains muted, struck-through resource/time labels and an explicit status. Enter/Space opens the existing details dialog; close restores focus, with the schedule heading as a fallback when cancellation removes the original entry. Global List remains the separate 50-row history view.

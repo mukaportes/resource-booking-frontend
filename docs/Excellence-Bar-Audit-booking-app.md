@@ -126,3 +126,7 @@ The original audit and verdict above describe M05. A focused M06 reassessment re
 ### Follow-up correction after implementation CI
 
 The user requested a fresh excellence-bar audit after CI passed. [Post-CI M06 audit](Excellence-Bar-Reaudit-M06.md) supersedes the all-resolved closure statement immediately above: six work packages remain resolved, while M06-06 is reopened for a reproduced mutable-cache/ownership regression. The fresh verdict is CONDITIONAL, with a separate dense-week readability Major and two UX Minors. M06 is not complete.
+
+## Latest focused reassessment after authorized repairs
+
+The user authorized one additional repair cycle for all four follow-up findings. The [final M06 reassessment](Excellence-Bar-Final-M06.md) closes them, restores M06-06's ownership/record-preservation gate and scores 4/4/4 within the browser-only MVP scope. This document's earlier verdict, findings and evidence are retained as history. Required final CI/publication status is recorded in [MVP progress](MVP-progress.md); no merge or deployment occurred.

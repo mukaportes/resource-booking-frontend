@@ -1,0 +1,60 @@
+{
+  "revision": "c5390f9af74614393eb957ebc93ae28f93d48bf6",
+  "browser": "159.0.8154.6",
+  "timestamp": "2026-11-20T13:27:06.424Z",
+  "resourceValidation": {
+    "message": "Choose a resource.",
+    "resourceInvalid": "true",
+    "resourceDescription": "booking-error-resourceId",
+    "times": [
+      {
+        "type": "date",
+        "value": "2027-03-14",
+        "invalid": "false"
+      },
+      {
+        "type": "time",
+        "value": "09:00",
+        "invalid": "false"
+      },
+      {
+        "type": "date",
+        "value": "2027-03-14",
+        "invalid": "false"
+      },
+      {
+        "type": "time",
+        "value": "09:30",
+        "invalid": "false"
+      }
+    ]
+  },
+  "scheduleDatePicker": {
+    "viewedDate": "2027-03-14",
+    "pickerText": "March 2027\nSu\tMo\tTu\tWe\tTh\tFr\tSa\n\n28\n\t\n1\n\t\n2\n\t\n3\n\t\n4\n\t\n5\n\t\n6\n\n\n7\n\t\n8\n\t\n9\n\t\n10\n\t\n11\n\t\n12\n\t\n13\n\n\n14\n\t\n15\n\t\n16\n\t\n17\n\t\n18\n\t\n19\n\t\n20\n\n\n21\n\t\n22\n\t\n23\n\t\n24\n\t\n25\n\t\n26\n\t\n27\n\n\n28\n\t\n29\n\t\n30\n\t\n31\n\t\n1\n\t\n2\n\t\n3"
+  },
+  "denseFixture": {
+    "records": 5000,
+    "users": 100,
+    "activeVisible": 2352,
+    "cancelledHistory": 2648,
+    "bytes": 912048
+  },
+  "denseWeek": {
+    "loadMs": 43.81041599999992,
+    "eventCount": 10,
+    "pageStatus": "Previous page\nPage 1 of 236 · 2352 bookings\nNext page",
+    "minimumEntryWidth": 1125,
+    "axeViolations": [],
+    "secondPageStatus": "Previous page\nPage 2 of 236 · 2352 bookings\nNext page",
+    "secondPageFirstEntry": "Details for booking 11"
+  },
+  "externalDetail": {
+    "status": "Booking #337\n\nThe resource, time and owner for this reservation.\n\nResource\nRoom 1\nOwner\nmember36@example.com\nStart\nJan 12, 2027, 12:00 AM GMT+0\nEnd\nJan 12, 2027, 12:30 AM GMT+0\nStatus\nCancelled\nCreated\nJan 1, 1970, 12:00 AM GMT+0\nClose",
+    "cancelActionCount": 0
+  },
+  "typicalSharedWeek": {
+    "eventCount": 7,
+    "minimumEntryWidth": 1125
+  }
+}
