@@ -3,7 +3,7 @@
 
 :root {
   --foreground: #263846;
-  --muted-foreground: #627583;
+  --muted-foreground: #536775;
   --surface: #ffffff;
   --subtle-surface: #f3f7fa;
   --border: #dbe5ec;
@@ -669,4 +669,18 @@ tr:last-child td {
     var(--border) 44px 45px
   );
   border: 1px solid var(--border);
+}
+
+.status-badge {
+  display: inline-flex;
+  padding: 4px 8px;
+  border-radius: 5px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--primary-tint);
+  color: var(--primary);
+}
+.status-badge.cancelled {
+  background: var(--subtle-surface);
+  color: var(--foreground);
 }
