@@ -640,7 +640,7 @@ All four questions were answered by the product owner on 2026-11-20.
 
 ### 17.1 M6 — Audit remediation and acceptance
 
-**Status:** Implemented and verified; publication for review recorded in [MVP progress](MVP-progress.md). All seven original findings are resolved within the measured browser-only scope; see [M06 acceptance](M06-acceptance.md).
+**Status:** Implemented and CI-verified, but not complete. The [post-CI excellence-bar audit](Excellence-Bar-Reaudit-M06.md) reopens M06-06 because mutable query results can alter cached trusted records used by commands. See [MVP progress](MVP-progress.md), [M06 acceptance](M06-acceptance.md) and [PR #7](https://github.com/mukaportes/resource-booking-frontend/pull/7).
 
 **Dependency:** M5 implementation.
 
@@ -689,3 +689,7 @@ All four questions were answered by the product owner on 2026-11-20.
 - Snapshot reuse compares raw storage values on every read, including commit-time reads. Ownership validation uses a Set, calendar input overlaps only the visible local interval and list history uses 50-row pages. No retained record or sequence is truncated.
 - The supported local evaluation envelope is 5,000 bookings, 100 users and 1 MiB total serialized UTF-8 envelope values on the measured desktop configuration. Larger history/dense calendars/slower devices remain unmeasured. Detailed fixture, raw samples and interaction timings are in [M06 acceptance](M06-acceptance.md); CI has no timing threshold.
 - Diagnostics omit arbitrary messages and retain safe type/stack locations plus fixed operation context. The diagnostic event, returned error and copied reference share one correlation ID; the sink remains local console output.
+
+#### Post-CI reassessment
+
+The fresh excellence-bar audit found a cache-isolation regression: callers can mutate returned booking objects while raw storage remains unchanged, and a later cancellation trusts that cached owner. M06-06 must isolate validated records from query consumers and prove ownership/record/ID preservation before M6 can be marked complete. The report also records a shared-week readability Major and field-association/date-picker Minors. The acceptance criteria above are unchanged; passing CI alone does not close these findings.

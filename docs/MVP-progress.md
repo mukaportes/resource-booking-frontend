@@ -11,7 +11,7 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 | M03  | Login, session, app shell and toasts        | Complete — merged              | `feat/M03-session-app-shell` | M02        | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed    |
 | M04  | Calendar, filters, booking modals and list  | Complete — merged              | `feat/M04-booking-workspace` | M03        | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed                         |
 | M05  | Accessibility, resilience, README and demo  | Complete — merged | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; GitHub CI passed |
-| M06 | Audit remediation — 1 Blocker + 6 Majors | Verified — publication pending | `fix/M06-audit-remediation` | M05 | Pending | 65 tests; 14/14 production Chromium scenarios; typecheck/lint/build; measured history budget |
+| M06 | Audit remediation — 1 Blocker + 6 Majors | Open — post-CI audit requires repair | `fix/M06-audit-remediation` | M05 | [#7](https://github.com/mukaportes/resource-booking-frontend/pull/7) | 65 tests; 14/14 production Chromium scenarios; typecheck/lint/build and implementation CI passed; audit gate open |
 
 ## Acceptance and delivery
 
@@ -20,7 +20,7 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 - M03: FR-U1–U6, gated empty shell, Atlas primitives, feedback and typed storage recovery.
 - M04: FR-A/B/C/L, day/week FullCalendar, shared URL filters, create/details/cancel workflows and list history.
 - M05: challenge README/demo, route/root error boundaries, contrast, browser CI and keyboard/mobile acceptance.
-- M06: all seven original findings are resolved under PRD §17.1; [per-finding reassessment and measured evidence](M06-acceptance.md). Store every timestamp as UTC epoch milliseconds and display browser-local time; no timezone configuration or custom timezone engine. The focused reassessment covers all seven findings; it does not assign a broader excellence score.
+- M06: implementation is verified, but the post-CI audit reopens the M06-06 preservation gate; [per-finding reassessment and measured evidence](M06-acceptance.md). Store every timestamp as UTC epoch milliseconds and display browser-local time; no timezone configuration or custom timezone engine. The focused reassessment covers all seven findings; it does not assign a broader excellence score.
 - Dependent PRs form a native GitHub stack rooted at `main`; the stack retargets as lower layers merge. M01–M04 were merged on GitHub during delivery; the agent did not merge them.
 
 ## M01–M05 verification (historical)
@@ -52,4 +52,6 @@ UI evidence: [Desktop Atlas capture](mvp-resource-atlas-desktop.png) · [360 px 
 - New behavioral regressions cover local/DST-to-UTC persistence and reload, session-only recovery, readable startup quota versus access denial, date-context defaults, local/external availability revision changes, submission-conflict reconciliation, bounded history/visible-range events and both copied diagnostic references.
 - Populated desktop/360 px, keyboard/focus and relevant axe states were rechecked. No serious/critical axe issues were reported in the exercised states; this is not a full accessibility certification.
 - At 5,000 bookings / 100 users / 903,480 serialized UTF-8 bytes, median list load changed from 882.2 to 53.3 ms and ID-sort interaction from 513.4 to 32.6 ms; rendered history changed from 5,000 to at most 50 rows. Three samples per fixture per revision; exact samples and limitations are in [M06 acceptance](M06-acceptance.md). No CI timing threshold was introduced.
-- All seven original findings are reassessed as resolved within the browser-only scope. No merge, deployment, production authentication, cross-tab locking or remote monitoring was performed. Publication/CI status will be updated with the review PR.
+- Implementation CI passed: [run 44737120998](https://github.com/mukaportes/resource-booking-frontend/actions/runs/44737120998), including 14 Chromium scenarios in 24.7 seconds. [PR #7](https://github.com/mukaportes/resource-booking-frontend/pull/7) targets `main`.
+- The user requested a fresh excellence-bar audit after CI. [Post-CI report](Excellence-Bar-Reaudit-M06.md): CONDITIONAL; two Majors (mutable cache/query ownership coupling and unreadable shared-week overlap), two Minors (field associations and picker month). M06-06 is reopened because required ownership/record preservation is not satisfied for mutable query consumers. M06 remains incomplete despite passing checks.
+- No merge, deployment, production authentication, cross-tab locking or remote monitoring was performed. Further application repair requires a new authorized repair cycle under the principal-engineer run boundary; audit/report publication continues without changing application code.

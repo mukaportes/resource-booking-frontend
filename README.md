@@ -85,3 +85,5 @@ Time spent: approximately 45 minutes elapsed, including verification and the rep
 M06 verification: typecheck, lint, production build, 65 unit/integration/component tests and all 14 Chromium scenarios passed. See [MVP progress](docs/MVP-progress.md) for final PR/CI status and [acceptance evidence](docs/MVP-acceptance.md) for scope and limits.
 
 Product documentation, design previews and audit evidence live in `docs/`. This directory is outside the application source and public assets, excluded from Next.js production file tracing, and skipped by TypeScript, ESLint and Prettier. Keep documentation imports out of application code so these artifacts remain outside browser bundles.
+
+The [fresh post-CI excellence audit](docs/Excellence-Bar-Reaudit-M06.md) is **CONDITIONAL**. M06 remains incomplete: mutable query results can affect cached records used by later ownership checks, and the shared week needs a readable dense-overlap presentation. Passing checks and the list benchmark do not establish excellence-bar approval.

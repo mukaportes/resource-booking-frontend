@@ -1,0 +1,57 @@
+{
+  "revision": "ecbfc38",
+  "browser": "159.0.8154.6",
+  "timestamp": "2026-11-20T12:43:50.555Z",
+  "resourceValidation": {
+    "message": "Choose a resource.",
+    "resourceInvalid": null,
+    "resourceDescription": null,
+    "times": [
+      {
+        "type": "date",
+        "value": "2027-03-14",
+        "invalid": "true"
+      },
+      {
+        "type": "time",
+        "value": "09:00",
+        "invalid": "true"
+      },
+      {
+        "type": "date",
+        "value": "2027-03-14",
+        "invalid": "true"
+      },
+      {
+        "type": "time",
+        "value": "09:30",
+        "invalid": "true"
+      }
+    ]
+  },
+  "scheduleDatePicker": {
+    "viewedDate": "2027-03-14",
+    "pickerText": "January 2027\nSu\tMo\tTu\tWe\tTh\tFr\tSa\n\n27\n\t\n28\n\t\n29\n\t\n30\n\t\n31\n\t\n1\n\t\n2\n\n\n3\n\t\n4\n\t\n5\n\t\n6\n\t\n7\n\t\n8\n\t\n9\n\n\n10\n\t\n11\n\t\n12\n\t\n13\n\t\n14\n\t\n15\n\t\n16\n\n\n17\n\t\n18\n\t\n19\n\t\n20\n\t\n21\n\t\n22\n\t\n23\n\n\n24\n\t\n25\n\t\n26\n\t\n27\n\t\n28\n\t\n29\n\t\n30\n\n\n31\n\t\n1\n\t\n2\n\t\n3\n\t\n4\n\t\n5\n\t\n6"
+  },
+  "denseFixture": {
+    "records": 5000,
+    "users": 100,
+    "activeVisible": 2352,
+    "cancelledHistory": 2648,
+    "bytes": 912048
+  },
+  "denseCalendar": {
+    "loadMs": 975.9596250000001,
+    "eventCount": 2352,
+    "minimumEventWidth": 21.21875,
+    "axeViolations": []
+  },
+  "externalDetail": {
+    "status": "Booking #337\n\nThe resource, time and owner for this reservation.\n\nResource\nRoom 1\nOwner\nmember36@example.com\nStart\nJan 12, 2027, 12:00 AM GMT+0\nEnd\nJan 12, 2027, 12:30 AM GMT+0\nStatus\nCancelled\nCreated\nJan 1, 1970, 12:00 AM GMT+0\nClose",
+    "cancelActionCount": 0
+  },
+  "typicalSharedWeek": {
+    "eventCount": 7,
+    "minimumEventWidth": 21.21875
+  }
+}

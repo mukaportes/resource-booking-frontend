@@ -122,3 +122,7 @@ The initial sandboxed browser run could not bind localhost (`EPERM`); the permit
 ## M06 remediation reassessment — November 20, 2026
 
 The original audit and verdict above describe M05. A focused M06 reassessment resolves all seven original findings within the browser-only scope: time-input integrity, session-only recovery, quota read-only/export recovery, viewed-date defaults, revision-driven availability, bounded/measured history processing and sanitized diagnostic causes. See [M06 acceptance](M06-acceptance.md) for the per-finding evidence and remaining limits, and [MVP progress](MVP-progress.md) for the review PR. This remediation assessment does not assign a new excellence score or certify broader release readiness.
+
+### Follow-up correction after implementation CI
+
+The user requested a fresh excellence-bar audit after CI passed. [Post-CI M06 audit](Excellence-Bar-Reaudit-M06.md) supersedes the all-resolved closure statement immediately above: six work packages remain resolved, while M06-06 is reopened for a reproduced mutable-cache/ownership regression. The fresh verdict is CONDITIONAL, with a separate dense-week readability Major and two UX Minors. M06 is not complete.

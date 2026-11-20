@@ -1,0 +1,9 @@
+{
+  "revision": "ecbfc38",
+  "queryMutationChangedStorage": false,
+  "cancelSucceeded": true,
+  "originalOwner": "owner@example.com",
+  "persistedOwnerIsOriginal": false,
+  "persistedOwnerIsOther": true,
+  "persistedStatus": "cancelled"
+}
