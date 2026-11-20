@@ -22,6 +22,6 @@ The scope is the front-end MVP in PRD §17, using Resource Atlas option 04. Back
 
 Browser acceptance runs in Chromium. Automated axe checks cover exercised login/workspace/mobile states and do not certify every WCAG criterion. Keyboard paths, modal focus, 360 px overflow and drag selection are exercised separately. Local storage has the documented browser/tab and concurrency limitations; this is not production authentication or backend acceptance.
 
-## Open acceptance finding
+## Final browser evidence
 
-M05 remains incomplete: Chromium axe reports that FullCalendar’s empty scroll area lacks a keyboard focus path. Directly focusing its nested scroller breaks ARIA grid semantics, so that attempted fix was reverted. Six of seven browser scenarios passed; the mobile accessibility scenario is not passing. The progress tracker records the repair boundary and next action.
+All seven Chromium scenarios passed on 2026-11-20, including native keyboard scrolling through a focusable day grid cell and Enter/Space booking details with focus restoration. Login, empty mobile calendar and populated calendar axe scans reported no serious/critical findings. Typecheck, lint, 55 unit/integration tests and the production build passed. The progress tracker records final publication/CI state.

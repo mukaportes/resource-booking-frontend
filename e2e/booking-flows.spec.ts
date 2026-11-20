@@ -245,6 +245,22 @@ test('360px Atlas defaults to day, scrolls cards locally and exposes keyboard fi
   ).toBeVisible();
   await page.getByRole('button', { name: 'Select all resources' }).click();
   await expect(page.locator('.fc-timegrid-body')).toBeVisible();
+  const calendarDay = page.locator('.fc-timegrid-col[role="gridcell"]');
+  await calendarDay.focus();
+  await expect(calendarDay).toBeFocused();
+  const scrollBefore = await calendarDay.evaluate(
+    (element) =>
+      element.closest('.fc-scroller-liquid-absolute')?.scrollTop ?? 0,
+  );
+  await page.keyboard.press('ArrowDown');
+  await expect
+    .poll(() =>
+      calendarDay.evaluate(
+        (element) =>
+          element.closest('.fc-scroller-liquid-absolute')?.scrollTop ?? 0,
+      ),
+    )
+    .toBeGreaterThan(scrollBefore);
   expect(await seriousAccessibilityIssues(page)).toEqual([]);
   await page.getByRole('button', { name: '＋ New booking' }).focus();
   await page.keyboard.press('Enter');
@@ -282,7 +298,17 @@ test('dragging a future calendar interval opens a prefilled booking', async ({
     dialog.getByRole('button', { name: 'Book', exact: true }),
   ).toBeEnabled();
   await dialog.getByRole('button', { name: 'Book', exact: true }).click();
-  await expect(
-    page.getByRole('button', { name: /^Booking #1,/ }),
-  ).toBeVisible();
+  const bookingEvent = page.getByRole('button', { name: /^Booking #1,/ });
+  await expect(bookingEvent).toBeVisible();
+  await bookingEvent.focus();
+  await page.keyboard.press('Enter');
+  const details = page.getByRole('dialog', { name: 'Booking #1', exact: true });
+  await expect(details).toBeVisible();
+  await details.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(bookingEvent).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(details).toBeVisible();
+  await details.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(bookingEvent).toBeFocused();
+  expect(await seriousAccessibilityIssues(page)).toEqual([]);
 });

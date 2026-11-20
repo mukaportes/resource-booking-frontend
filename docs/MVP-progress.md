@@ -2,36 +2,38 @@
 
 Source: [PRD-resource-booking.md](PRD-resource-booking.md), §17. UI: [Resource Atlas, option 04](UI-resource-atlas.md).
 
-Updated: 2026-11-20. Delivery means implemented, verified and published for review; it does not mean merged or deployed.
+Updated: 2026-11-20. Delivery means implemented, verified and published for review; deployment is outside scope. Native GitHub stack **#6** contains the milestone PRs and lands on `main`.
 
-| Code | Milestone | Status | Branch | Dependency | PR | Verification |
-|---|---|---|---|---|---|---|
-| M01 | Domain core + tests | Complete — PR open | `feat/M01-domain-core` | — | [#1](https://github.com/mukaportes/resource-booking-frontend/pull/1) | 25 tests; typecheck/lint; GitHub CI passed |
-| M02 | Storage adapter, repositories and use cases | Complete — PR open | `feat/M02-storage-use-cases` | M01 | [#2](https://github.com/mukaportes/resource-booking-frontend/pull/2) | 41 tests; typecheck/lint; GitHub CI passed |
-| M03 | Login, session, app shell and toasts | Complete — PR open | `feat/M03-session-app-shell` | M02 | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed |
-| M04 | Calendar, filters, booking modals and list | Complete — PR open | `feat/M04-booking-workspace` | M03 | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed |
-| M05 | Accessibility, resilience, README and demo | Incomplete — draft delivery | `feat/M05-polish-demo` | M04 | [#5 (draft)](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 6/7 browser scenarios passed; calendar scroll accessibility unresolved; final checks pending |
+| Code | Milestone                                   | Status                            | Branch                       | Dependency | PR                                                                   | Verification                                                          |
+| ---- | ------------------------------------------- | --------------------------------- | ---------------------------- | ---------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| M01  | Domain core + tests                         | Complete — merged                 | `feat/M01-domain-core`       | —          | [#1](https://github.com/mukaportes/resource-booking-frontend/pull/1) | 25 tests; typecheck/lint; GitHub CI passed                            |
+| M02  | Storage adapter, repositories and use cases | Complete — merged                 | `feat/M02-storage-use-cases` | M01        | [#2](https://github.com/mukaportes/resource-booking-frontend/pull/2) | 41 tests; typecheck/lint; GitHub CI passed                            |
+| M03  | Login, session, app shell and toasts        | Complete — PR open                | `feat/M03-session-app-shell` | M02        | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed |
+| M04  | Calendar, filters, booking modals and list  | Complete — PR open                | `feat/M04-booking-workspace` | M03        | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed                      |
+| M05  | Accessibility, resilience, README and demo  | Verification passed — awaiting CI | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; CI pending    |
 
-## Acceptance and delivery rules
+## Acceptance and delivery
 
-- M01: pure domain functions, the full PRD §6.3 scenario and meaningful rule tests.
-- M02: validated storage, rollback, monotonic sequence, identity and ownership use cases.
-- M03: FR-U1–U6, empty gated shell, Atlas primitives, consistent toasts.
-- M04: FR-A/B/C/L, FullCalendar day/week, shared URL filters, create/details/cancel flows and list.
-- M05: PRD §12 acceptance evidence, keyboard/mobile checks, error boundaries, recovery and challenge README.
-- Each dependent PR targets its predecessor for a focused diff and ultimately lands on `main` in stack order. No automatic merges.
-- Status changes are recorded here when each milestone finishes, with checks actually run and any limitations.
+- M01: framework-free domain functions and the full PRD §6.3 numeric scenario.
+- M02: validated storage, synchronous booking/sequence commit and rollback, monotonic IDs, identity and trusted ownership checks.
+- M03: FR-U1–U6, gated empty shell, Atlas primitives, feedback and typed storage recovery.
+- M04: FR-A/B/C/L, day/week FullCalendar, shared URL filters, create/details/cancel workflows and list history.
+- M05: challenge README/demo, route/root error boundaries, contrast, browser CI and keyboard/mobile acceptance.
+- Dependent PRs form a native GitHub stack rooted at `main`; the stack retargets as lower layers merge. M01 and M02 were merged on GitHub during delivery; the agent did not merge them.
 
-## M05 handoff — 2026-11-20
+## Final verification
 
-Implemented: seven Chromium acceptance scenarios; root/route error fallbacks; challenge README and demo; acceptance evidence; browser CI; stronger resource-caption/toast contrast; status badges. The source PRD and Atlas preview/specification are mirrored into the frontend repository for reviewers.
+- `npm run typecheck`: passed.
+- `npm run lint`: passed with zero warnings.
+- `npm test`: 55 passed across five files.
+- `npm run build`: passed using Next.js Webpack.
+- `npm run test:e2e -- --workers=2`: 7/7 Chromium scenarios passed.
+- Real browser flows cover login/session/logout, conflict and adjacency, cancellation and non-reused IDs, non-owner details, URL restoration, corruption export/reset, blocked storage, 360 px layout, drag submission, keyboard scrolling and event Enter/Space access.
+- Axe scans cover login, mobile empty calendar and a populated calendar, with no serious/critical findings in those states. This is not a full WCAG certification or cross-browser audit.
+- Visual comparison at desktop and 360 px confirms Atlas hierarchy, seven-resource deck, blue tokens and responsive schedule composition.
 
-Unresolved: the calendar's empty scroll region needs a valid keyboard focus path. Adding focus directly to FullCalendar's nested scroller breaks its ARIA grid hierarchy. That attempted change was reverted to the M04 baseline; the original scroll-focus finding remains. Automated accessibility acceptance is not complete.
+## Execution record and limits
 
-Evidence: M04's 55 tests/typecheck/lint/build and GitHub CI passed. M05's initial full Chromium suite passed six scenarios and failed the mobile accessibility scenario. The contrast fixes passed the subsequent mobile scan, but scroll/grid semantics did not. Final M05 checks must be rerun after the remaining fix.
+Started: 2026-11-20 07:55 America/Sao_Paulo. The skill's initial two M05 repair cycles reached a calendar accessibility boundary. The user explicitly authorized one additional targeted cycle; it passed. The fix focuses FullCalendar's existing day grid cells through `dayCellDidMount`, retaining its ARIA grid hierarchy and native keyboard scrolling.
 
-Execution boundary: the principal-engineer skill's two repair cycles have been used for M05. Further implementation requires a user-directed continuation or extension. Recommended next action: focus a semantically valid calendar descendant, verify keyboard scrolling and axe, then run all checks and finish the draft. Estimated remaining effort: 10–20 minutes. No PR has been merged or deployed.
-
-Started at 2026-11-20 07:55 America/Sao_Paulo. The initial implementation/handoff took approximately 20 minutes; the skill's 90-minute time budget was not exhausted.
-
-Native GitHub stack **#6** has been created and verified through the GitHub API. It contains PRs #1 → #2 → #3 → #4 → #5 and targets `main`; #5 is a draft. Its stack map is available from each PR. M05 CI is running; passing completion is not claimed. A user-directed one-cycle extension has been requested and is pending.
+The front-end MVP retains the PRD's fake identity, per-browser storage and multi-tab concurrency limitations. Backend, deployment and production operational acceptance were not performed. CI for the final published revision must pass before M05 is marked complete.

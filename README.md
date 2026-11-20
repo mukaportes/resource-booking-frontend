@@ -79,4 +79,4 @@ AI agents implemented the domain, persistence/application layer, and UI in paral
 
 Time spent and final verification evidence are recorded in the progress tracker at delivery. Backend, deployment and production operational acceptance are outside this MVP.
 
-Current delivery: M01–M04 have open PRs and passing CI. M05 is an incomplete draft because the calendar scroll area still needs a valid keyboard focus path. See [MVP progress](docs/MVP-progress.md) and [acceptance evidence](docs/MVP-acceptance.md).
+Verification: typecheck, lint, production build, 55 unit/integration tests and all seven Chromium scenarios passed. See [MVP progress](docs/MVP-progress.md) for final PR/CI status and [acceptance evidence](docs/MVP-acceptance.md) for scope and limits.
