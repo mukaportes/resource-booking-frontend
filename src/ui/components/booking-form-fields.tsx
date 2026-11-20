@@ -13,10 +13,12 @@ export function BookingFormFields({
   fields,
   update,
   startAt,
+  invalid,
 }: {
   fields: BookingFields;
   update: (name: keyof BookingFields, value: string) => void;
   startAt: number;
+  invalid: string;
 }) {
   return (
     <>
@@ -47,6 +49,8 @@ export function BookingFormFields({
         <label>
           Start date
           <Input
+            aria-invalid={Boolean(invalid)}
+            aria-describedby="booking-validation"
             type="date"
             value={fields.startDate}
             onChange={(event) => update('startDate', event.target.value)}
@@ -55,6 +59,8 @@ export function BookingFormFields({
         <label>
           Start time
           <Input
+            aria-invalid={Boolean(invalid)}
+            aria-describedby="booking-validation"
             type="time"
             step={1800}
             value={fields.startTime}
@@ -66,6 +72,8 @@ export function BookingFormFields({
         <label>
           End date
           <Input
+            aria-invalid={Boolean(invalid)}
+            aria-describedby="booking-validation"
             type="date"
             min={fields.startDate}
             value={fields.endDate}
@@ -75,10 +83,12 @@ export function BookingFormFields({
         <label>
           End time
           <Input
+            aria-invalid={Boolean(invalid)}
+            aria-describedby="booking-validation"
             type="time"
             step={1800}
             min={
-              fields.startDate === fields.endDate
+              Number.isFinite(startAt) && fields.startDate === fields.endDate
                 ? toTimeInput(startAt + SLOT_MS)
                 : undefined
             }

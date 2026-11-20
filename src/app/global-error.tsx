@@ -1,6 +1,7 @@
 'use client';
 import { ErrorView } from '@/ui/components/error-view';
 export default function GlobalError({
+  error,
   retry,
 }: {
   error: unknown;
@@ -9,7 +10,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <ErrorView retry={retry} />
+        <ErrorView error={error} retry={retry} />
       </body>
     </html>
   );

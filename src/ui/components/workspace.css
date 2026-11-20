@@ -222,3 +222,13 @@
 .calendar-panel .fc-event-main {
   color: inherit;
 }
+
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 1rem;
+  flex-wrap: wrap;
+  font-size: 0.875rem;
+}

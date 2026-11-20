@@ -10,12 +10,13 @@ export function useBookingAvailability(
   endAt: number,
   invalid: string,
   refresh: () => Promise<void>,
+  revision: number,
 ) {
   const [availability, setAvailability] = useState<{
     key: string;
     result: Result<AvailabilityResult>;
   } | null>(null);
-  const key = `${resourceId}:${startAt}:${endAt}`;
+  const key = `${resourceId}:${startAt}:${endAt}:${revision}`;
   useEffect(() => {
     if (invalid || !app) return;
     let active = true;

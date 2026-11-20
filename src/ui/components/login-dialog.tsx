@@ -14,7 +14,7 @@ import {
 } from './ui/dialog';
 
 export function LoginDialog() {
-  const { app, user, loading, error, refresh } = useApplication();
+  const { app, user, loading, error, refresh, readOnly } = useApplication();
   const [email, setEmail] = useState('');
   const [fieldError, setFieldError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -45,7 +45,7 @@ export function LoginDialog() {
   }
 
   return (
-    <Dialog open={!loading && !user && !error}>
+    <Dialog open={!loading && !user && !error && !readOnly}>
       <DialogContent
         onEscapeKeyDown={(event) => event.preventDefault()}
         onPointerDownOutside={(event) => event.preventDefault()}

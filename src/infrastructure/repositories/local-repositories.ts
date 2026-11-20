@@ -55,7 +55,7 @@ export class LocalBookingRepository implements BookingRepository {
           result.value.id,
         );
       return result;
-    });
+    }, 'booking.create');
     return wrapped.ok ? wrapped.value : wrapped;
   }
 
@@ -76,7 +76,7 @@ export class LocalBookingRepository implements BookingRepository {
         );
       }
       return result;
-    });
+    }, 'booking.cancel');
     return wrapped.ok ? wrapped.value : wrapped;
   }
 
@@ -85,11 +85,13 @@ export class LocalBookingRepository implements BookingRepository {
     startAt: number,
     endAt: number,
   ) {
-    const result = capture(() =>
-      checkAvailability(this.data.read().bookings, resourceId, {
-        startAt,
-        endAt,
-      }),
+    const result = capture(
+      () =>
+        checkAvailability(this.data.read().bookings, resourceId, {
+          startAt,
+          endAt,
+        }),
+      'booking.availability',
     );
     return result.ok ? result.value : result;
   }

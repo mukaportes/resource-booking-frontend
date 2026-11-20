@@ -5,6 +5,7 @@ import { Toaster } from 'sonner';
 import { ApplicationProvider, useApplication } from '../hooks/use-application';
 import { notify } from '../lib/notifications';
 import { LoginDialog } from './login-dialog';
+import { StorageCapacity } from './storage-capacity';
 import { StorageRecovery } from './storage-recovery';
 import { Button } from './ui/button';
 
@@ -16,7 +17,7 @@ const toastTheme: CSSProperties & Record<`--${string}`, string> = {
 };
 
 function WorkspaceShell({ children }: { children?: ReactNode }) {
-  const { app, user, loading, error, refresh } = useApplication();
+  const { app, user, loading, error, refresh, readOnly } = useApplication();
   async function logout() {
     if (!app) return;
     const result = await app.logout();
@@ -45,6 +46,7 @@ function WorkspaceShell({ children }: { children?: ReactNode }) {
             </span>
             <span className="identity-email">{user.email}</span>
             <Button
+              disabled={readOnly}
               variant="ghost"
               onClick={() => {
                 void logout();
@@ -56,6 +58,7 @@ function WorkspaceShell({ children }: { children?: ReactNode }) {
         )}
       </header>
       <main id="workspace" className="atlas-layout" tabIndex={-1}>
+        <StorageCapacity />
         {loading ? (
           <div
             role="status"
@@ -67,7 +70,7 @@ function WorkspaceShell({ children }: { children?: ReactNode }) {
             <div className="skeleton skeleton-cards" />
             <div className="skeleton skeleton-calendar" />
           </div>
-        ) : user && !error ? (
+        ) : (user || readOnly) && !error ? (
           (children ?? (
             <section className="empty-state">
               <span className="eyebrow">YOUR WORKSPACE</span>

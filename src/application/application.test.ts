@@ -204,6 +204,13 @@ describe('browser application boundary', () => {
     const first = createApplication(local, session, () => 0);
     await first.login('a@example.com');
     const second = createApplication(local, session, () => 0);
+    expect(
+      await second.checkAvailability(
+        command.resourceId,
+        command.startAt,
+        command.endAt,
+      ),
+    ).toMatchObject({ ok: true, value: { isAvailable: true } });
     await first.createBooking(command);
     expect(await second.createBooking(command)).toMatchObject({
       error: { code: 'TIME_SLOT_CONFLICT' },
@@ -234,19 +241,28 @@ describe('browser application boundary', () => {
   });
 
   it.each(['null', '{"schemaVersion":1,"session":null}', '{}', '{broken'])(
-    'rejects malformed session storage while preserving the raw value: %s',
+    'recovers only a malformed session and keeps raw export evidence: %s',
     async (raw) => {
+      const app = createApplication(local, session, () => 0);
+      await app.login('a@example.com');
+      await app.createBooking(command);
+      const before = local.snapshot();
       session.setItem(STORAGE_KEYS.session, raw);
-      const app = createApplication(local, session);
-      const expected = {
-        error: {
-          code: 'STORAGE_CORRUPTED',
-          details: { key: STORAGE_KEYS.session },
-        },
-      };
-      expect(await app.initialize()).toMatchObject(expected);
-      expect(await app.getCurrentUser()).toMatchObject(expected);
-      expect(session.getItem(STORAGE_KEYS.session)).toBe(raw);
+      expect(await app.initialize()).toMatchObject({
+        ok: true,
+        value: { user: null, sessionReset: true },
+      });
+      expect(session.getItem(STORAGE_KEYS.session)).toBeNull();
+      expect(await app.exportRawData()).toMatchObject({
+        ok: true,
+        value: expect.stringContaining(JSON.stringify(raw)),
+      });
+      await app.login('a@example.com');
+      expect(local.snapshot()).toBe(before);
+      expect(await app.listBookings()).toMatchObject({
+        ok: true,
+        value: [{ id: 1 }],
+      });
     },
   );
 
@@ -348,5 +364,70 @@ describe('browser application boundary', () => {
     expect(await app.initialize()).toMatchObject({
       error: { code: 'STORAGE_UNAVAILABLE' },
     });
+  });
+  it('opens readable data without mutation at startup quota and resumes only after successful probes', async () => {
+    const app = createApplication(local, session, () => 0);
+    await app.login('a@example.com');
+    await app.createBooking(command);
+    session.clear();
+    const before = local.snapshot();
+    const write = vi.spyOn(local, 'setItem').mockImplementation(() => {
+      throw new DOMException('Full', 'QuotaExceededError');
+    });
+    expect(await app.initialize()).toMatchObject({
+      ok: true,
+      value: { user: null, readOnly: true },
+    });
+    expect(await app.listBookings()).toMatchObject({
+      ok: true,
+      value: [{ id: 1 }],
+    });
+    expect(await app.exportRawData()).toMatchObject({ ok: true });
+    expect(await app.login('b@example.com')).toMatchObject({
+      error: { code: 'STORAGE_QUOTA_EXCEEDED' },
+    });
+    expect(await app.createBooking(command)).toMatchObject({
+      error: { code: 'STORAGE_QUOTA_EXCEEDED' },
+    });
+    expect(await app.cancelBooking(1)).toMatchObject({
+      error: { code: 'STORAGE_QUOTA_EXCEEDED' },
+    });
+    expect(await app.resetLocalData('RESET')).toMatchObject({
+      error: { code: 'STORAGE_QUOTA_EXCEEDED' },
+    });
+    expect(local.snapshot()).toBe(before);
+    write.mockRestore();
+    expect(await app.initialize()).toMatchObject({
+      ok: true,
+      value: { user: null },
+    });
+    expect(await app.login('a@example.com')).toMatchObject({ ok: true });
+    expect(await app.cancelBooking(1)).toMatchObject({ ok: true });
+  });
+
+  it('reuses validated users until raw storage changes and validates external revisions before commit', async () => {
+    const app = createApplication(local, session, () => 0);
+    await app.login('a@example.com');
+    const first = await app.getUsers();
+    const second = await app.getUsers();
+    expect(first.ok && second.ok && first.value === second.value).toBe(true);
+    await app.createBooking(command);
+    const external = createApplication(local, session, () => 0);
+    await external.cancelBooking(1);
+    expect(
+      await app.checkAvailability(
+        command.resourceId,
+        command.startAt,
+        command.endAt,
+      ),
+    ).toMatchObject({ ok: true, value: { isAvailable: true } });
+    expect(await app.createBooking(command)).toMatchObject({
+      ok: true,
+      value: { id: 2 },
+    });
+    local.setItem(STORAGE_KEYS.bookings, '{broken');
+    expect(
+      await app.createBooking({ ...command, resourceId: 'room-2' }),
+    ).toMatchObject({ error: { code: 'STORAGE_CORRUPTED' } });
   });
 });

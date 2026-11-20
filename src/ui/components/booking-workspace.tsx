@@ -4,8 +4,13 @@ import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { BookingStatus, RESOURCES, type Booking } from '../../domain';
 import { useApplication } from '../hooks/use-application';
+import { notify } from '../lib/notifications';
 import { useViewState } from '../hooks/use-view-state';
-import { nextSlot, SLOT_MS } from '../lib/time';
+import {
+  defaultBookingStart,
+  SLOT_MS,
+  visibleScheduleRange,
+} from '../lib/time';
 import { BookingDetails } from './booking-details';
 import { BookingDialog, type BookingSelection } from './booking-dialog';
 import { BookingTable } from './booking-table';
@@ -29,22 +34,28 @@ const BookingCalendar = dynamic(() => import('./booking-calendar'), {
   ),
 });
 export function BookingWorkspace() {
-  const { user, bookings, users } = useApplication();
+  const { user, bookings, users, readOnly } = useApplication();
   const { state, update, ready } = useViewState();
   const [selection, setSelection] = useState<BookingSelection | null>(null);
   const [details, setDetails] = useState<Booking | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  if (!user || !ready)
+  if ((!user && !readOnly) || !ready)
     return <div className="calendar-skeleton" aria-label="Loading workspace" />;
   const filtered = bookings.filter(
     (booking) =>
       state.resourceIds.includes(booking.resourceId) &&
-      (!state.mine || booking.userId === user.userId),
+      (!state.mine || !user || booking.userId === user.userId),
   );
+  const defaultStart = defaultBookingStart(state.date);
+  const range = visibleScheduleRange(state.date, state.view);
   const calendarBookings = filtered.filter(
-    (booking) => state.showCancelled || booking.status === BookingStatus.Active,
+    (booking) =>
+      (state.showCancelled || booking.status === BookingStatus.Active) &&
+      booking.endAt > range.from &&
+      booking.startAt < range.to,
   );
   function select(startAt: number, endAt: number) {
+    if (readOnly) return;
     setSelection({
       startAt,
       endAt,
@@ -60,14 +71,25 @@ export function BookingWorkspace() {
           <h1>What do you need to do your best work?</h1>
         </div>
         <Button
+          disabled={readOnly || defaultStart === null}
+          aria-describedby={
+            defaultStart === null ? 'booking-date-policy' : undefined
+          }
           onClick={() => {
-            const start = nextSlot();
-            select(start, start + SLOT_MS);
+            const start = defaultBookingStart(state.date);
+            if (start !== null) select(start, start + SLOT_MS);
+            else notify.info('View today or a future day to create a booking.');
           }}
         >
           ＋ New booking
         </Button>
       </div>
+      {defaultStart === null && (
+        <p id="booking-date-policy" role="status">
+          Bookings cannot start on a past day. View today or a future day to
+          create a booking.
+        </p>
+      )}
       <div className="deck-caption">
         <p className="muted">
           Choose a resource to focus its schedule. Use Filters for multiple
@@ -153,9 +175,10 @@ export function BookingWorkspace() {
             </div>
           ) : state.view === 'list' ? (
             <BookingTable
+              key={`${state.resourceIds.join(',')}:${state.mine}`}
               bookings={filtered}
               users={users}
-              userId={user.userId}
+              userId={user?.userId ?? ''}
               onBooking={setDetails}
             />
           ) : (
@@ -163,7 +186,7 @@ export function BookingWorkspace() {
               <BookingCalendar
                 bookings={calendarBookings}
                 users={users}
-                userId={user.userId}
+                userId={user?.userId ?? ''}
                 state={state}
                 onSelect={select}
                 onBooking={setDetails}

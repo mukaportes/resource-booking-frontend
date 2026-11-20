@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { DomainError, Result } from '../../domain';
-import { logger } from '../logger';
+import { reportUnexpected } from '../logger/diagnostics';
 
 export class StorageFault extends Error {
   constructor(readonly domainError: DomainError) {
@@ -16,13 +16,16 @@ export function storageError(
   return new StorageFault({ code, message, ...(details ? { details } : {}) });
 }
 
-export function capture<T>(operation: () => T): Result<T, DomainError> {
+export function capture<T>(
+  operation: () => T,
+  context = 'application.operation',
+): Result<T, DomainError> {
   try {
     return { ok: true, value: operation() };
   } catch (error) {
     if (error instanceof StorageFault)
       return { ok: false, error: error.domainError };
-    const correlationId = logger.error('Unexpected application failure');
+    const correlationId = reportUnexpected(error, context);
     return {
       ok: false,
       error: {
@@ -36,13 +39,14 @@ export function capture<T>(operation: () => T): Result<T, DomainError> {
 
 export async function captureAsync<T>(
   operation: () => Promise<T>,
+  context = 'application.operation',
 ): Promise<Result<T, DomainError>> {
   try {
     return { ok: true, value: await operation() };
   } catch (error) {
     return capture(() => {
       throw error;
-    });
+    }, context);
   }
 }
 
@@ -51,15 +55,15 @@ export class SafeStorage {
 
   probe() {
     const key = `resourceBooking:probe:${crypto.randomUUID()}`;
+    this.write(key, key);
     try {
-      this.storage.setItem(key, key);
-      if (this.storage.getItem(key) !== key) throw new Error('Probe mismatch');
-      this.storage.removeItem(key);
-    } catch {
-      throw storageError(
-        'STORAGE_UNAVAILABLE',
-        'Browser storage is unavailable. Allow site data or disable private mode.',
-      );
+      if (this.raw(key) !== key)
+        throw storageError(
+          'STORAGE_UNAVAILABLE',
+          'Browser storage probe could not be read.',
+        );
+    } finally {
+      this.write(key, null);
     }
   }
 
@@ -126,9 +130,10 @@ export class SafeStorage {
           const entry = previous[index];
           if (entry) this.write(entry[0], entry[1]);
         }
-      } catch {
-        const correlationId = logger.error(
-          'Storage rollback failed; reload and recover local data',
+      } catch (rollbackError) {
+        const correlationId = reportUnexpected(
+          rollbackError,
+          'storage.rollback',
         );
         throw storageError(
           'STORAGE_CORRUPTED',
