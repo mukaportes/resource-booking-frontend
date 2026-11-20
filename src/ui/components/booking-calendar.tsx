@@ -131,6 +131,16 @@ export default function BookingCalendar({
             : []
         }
         dayCellClassNames={(day) => (day.isPast ? ['past-day'] : [])}
+        dayCellDidMount={({ el, date }) => {
+          el.tabIndex = 0;
+          const day = new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'full',
+          }).format(date);
+          el.setAttribute(
+            'aria-label',
+            `${day} schedule. Use Up and Down to scroll; New booking to reserve.`,
+          );
+        }}
       />
     </div>
   );

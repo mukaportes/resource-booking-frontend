@@ -1,12 +1,19 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import { ApplicationProvider, useApplication } from '../hooks/use-application';
 import { notify } from '../lib/notifications';
 import { LoginDialog } from './login-dialog';
 import { StorageRecovery } from './storage-recovery';
 import { Button } from './ui/button';
+
+const toastTheme: CSSProperties & Record<`--${string}`, string> = {
+  '--success-text': '#245436',
+  '--info-text': 'var(--primary)',
+  '--warning-text': '#71490f',
+  '--error-text': 'var(--destructive)',
+};
 
 function WorkspaceShell({ children }: { children?: ReactNode }) {
   const { app, user, loading, error, refresh } = useApplication();
@@ -76,7 +83,12 @@ function WorkspaceShell({ children }: { children?: ReactNode }) {
       </main>
       <LoginDialog />
       <StorageRecovery />
-      <Toaster richColors closeButton position="bottom-right" />
+      <Toaster
+        richColors
+        closeButton
+        position="bottom-right"
+        style={toastTheme}
+      />
     </>
   );
 }
