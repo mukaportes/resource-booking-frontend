@@ -233,6 +233,23 @@ describe('browser application boundary', () => {
     expect(local.getItem(STORAGE_KEYS.users)).toBe(raw);
   });
 
+  it.each(['null', '{"schemaVersion":1,"session":null}', '{}', '{broken'])(
+    'rejects malformed session storage while preserving the raw value: %s',
+    async (raw) => {
+      session.setItem(STORAGE_KEYS.session, raw);
+      const app = createApplication(local, session);
+      const expected = {
+        error: {
+          code: 'STORAGE_CORRUPTED',
+          details: { key: STORAGE_KEYS.session },
+        },
+      };
+      expect(await app.initialize()).toMatchObject(expected);
+      expect(await app.getCurrentUser()).toMatchObject(expected);
+      expect(session.getItem(STORAGE_KEYS.session)).toBe(raw);
+    },
+  );
+
   it('rejects duplicate booking IDs instead of deriving a new sequence', async () => {
     const app = createApplication(local, session, () => 0);
     await app.login('a@example.com');

@@ -102,25 +102,19 @@ export class LocalData {
   }
 
   sessionUserId(): string | null {
-    return (
-      this.session.read(
-        STORAGE_KEYS.session,
-        sessionEnvelopeSchema.nullable(),
-        null,
-      )?.session.userId ?? null
-    );
+    const raw = this.session.raw(STORAGE_KEYS.session);
+    if (raw === null) return null;
+    try {
+      return sessionEnvelopeSchema.parse(JSON.parse(raw)).session.userId;
+    } catch {
+      this.corrupted(STORAGE_KEYS.session);
+    }
   }
 
   currentUser(users: User[]): { user: User | null; sessionReset: boolean } {
-    const value = this.session.read(
-      STORAGE_KEYS.session,
-      sessionEnvelopeSchema.nullable(),
-      null,
-    );
-    if (!value) return { user: null, sessionReset: false };
-    const user = users.find(
-      (candidate) => candidate.userId === value.session.userId,
-    );
+    const userId = this.sessionUserId();
+    if (userId === null) return { user: null, sessionReset: false };
+    const user = users.find((candidate) => candidate.userId === userId);
     if (user) return { user, sessionReset: false };
     this.session.write(STORAGE_KEYS.session, null);
     return { user: null, sessionReset: true };
