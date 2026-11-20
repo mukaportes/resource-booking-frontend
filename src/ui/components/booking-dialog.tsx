@@ -16,7 +16,7 @@ import {
   toTimeInput,
 } from '../lib/time';
 import { Button } from './ui/button';
-import { BookingFormFields } from './booking-form-fields';
+import { BookingFormFields, type BookingFields } from './booking-form-fields';
 import { BookingAvailability } from './booking-availability';
 import {
   Dialog,
@@ -59,17 +59,24 @@ export function BookingDialog({
   const startAt = toEpochMs(fields.startDate, fields.startTime);
   const endAt = toEpochMs(fields.endDate, fields.endTime);
   const resource = resourceIdSchema.safeParse(fields.resourceId);
-  const invalid = !resource.success
-    ? 'Choose a resource.'
-    : !Number.isFinite(startAt) || !Number.isFinite(endAt)
-      ? 'This local date or time does not exist. Choose a valid start and end.'
-      : endAt <= startAt
-        ? 'End time must be after start time.'
-        : startAt % SLOT_MS || endAt % SLOT_MS
-          ? 'Choose times on the 30-minute grid.'
-          : startAt < now
-            ? 'Choose a start time in the future.'
-            : '';
+  const fieldErrors: Partial<Record<keyof BookingFields, string>> = {};
+  if (!resource.success) fieldErrors.resourceId = 'Choose a resource.';
+  if (!Number.isFinite(startAt)) {
+    fieldErrors.startDate = fieldErrors.startTime =
+      'This local date or time does not exist. Choose a valid start.';
+  } else if (startAt % SLOT_MS)
+    fieldErrors.startTime = 'Choose times on the 30-minute grid.';
+  else if (startAt < now)
+    fieldErrors.startTime = 'Choose a start time in the future.';
+  if (!Number.isFinite(endAt)) {
+    fieldErrors.endDate = fieldErrors.endTime =
+      'This local date or time does not exist. Choose a valid end.';
+  } else if (Number.isFinite(startAt) && endAt <= startAt) {
+    fieldErrors.endDate = fieldErrors.endTime =
+      'End time must be after start time.';
+  } else if (endAt % SLOT_MS)
+    fieldErrors.endTime = 'Choose times on the 30-minute grid.';
+  const invalid = Object.values(fieldErrors)[0] ?? '';
   const result = useBookingAvailability(
     app,
     fields.resourceId,
@@ -187,7 +194,7 @@ export function BookingDialog({
               fields={fields}
               update={update}
               startAt={startAt}
-              invalid={invalid}
+              errors={fieldErrors}
             />
             {!invalid && (
               <p className="muted text-small">

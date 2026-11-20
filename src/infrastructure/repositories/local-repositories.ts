@@ -33,11 +33,15 @@ export class LocalBookingRepository implements BookingRepository {
       .sort(
         (first, second) =>
           first.startAt - second.startAt || first.id - second.id,
-      );
+      )
+      .map((booking) => ({ ...booking }));
   }
 
   async getById(id: number) {
-    return this.data.read().bookings.find((booking) => booking.id === id);
+    const booking = this.data
+      .read()
+      .bookings.find((booking) => booking.id === id);
+    return booking ? { ...booking } : undefined;
   }
 
   async create(input: CreateBookingInput, userId: string) {
@@ -54,6 +58,20 @@ export class LocalBookingRepository implements BookingRepository {
           [...snapshot.bookings, result.value],
           result.value.id,
         );
+      if (!result.ok && result.error.details?.conflicts) {
+        return {
+          ...result,
+          error: {
+            ...result.error,
+            details: {
+              ...result.error.details,
+              conflicts: result.error.details.conflicts.map((booking) => ({
+                ...booking,
+              })),
+            },
+          },
+        };
+      }
       return result;
     }, 'booking.create');
     return wrapped.ok ? wrapped.value : wrapped;
@@ -75,7 +93,12 @@ export class LocalBookingRepository implements BookingRepository {
           snapshot.lastIssuedId,
         );
       }
-      return result;
+      return result.ok
+        ? {
+            ...result,
+            value: { ...result.value, booking: { ...result.value.booking } },
+          }
+        : result;
     }, 'booking.cancel');
     return wrapped.ok ? wrapped.value : wrapped;
   }
@@ -85,14 +108,23 @@ export class LocalBookingRepository implements BookingRepository {
     startAt: number,
     endAt: number,
   ) {
-    const result = capture(
-      () =>
-        checkAvailability(this.data.read().bookings, resourceId, {
-          startAt,
-          endAt,
-        }),
-      'booking.availability',
-    );
+    const result = capture(() => {
+      const checked = checkAvailability(this.data.read().bookings, resourceId, {
+        startAt,
+        endAt,
+      });
+      return checked.ok
+        ? {
+            ...checked,
+            value: {
+              ...checked.value,
+              conflicts: checked.value.conflicts.map((booking) => ({
+                ...booking,
+              })),
+            },
+          }
+        : checked;
+    }, 'booking.availability');
     return result.ok ? result.value : result;
   }
 }
@@ -103,12 +135,12 @@ export class LocalUserRepository implements UserRepository {
     private readonly clock: () => number,
   ) {}
   async list() {
-    return this.data.read().users;
+    return this.data.read().users.map((user) => ({ ...user }));
   }
   async identify(normalizedEmail: string) {
     const users = this.data.read().users;
     const existing = users.find((user) => user.email === normalizedEmail);
-    if (existing) return existing;
+    if (existing) return { ...existing };
     const user = {
       userId: crypto.randomUUID(),
       email: normalizedEmail,

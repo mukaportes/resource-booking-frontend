@@ -115,7 +115,12 @@ export class LocalData {
         JSON.stringify({ schemaVersion: 1, lastIssuedId }),
       );
     }
-    const snapshot = { users, bookings, lastIssuedId };
+    // Cached records must never be writable through a consumer's read model.
+    users.forEach(Object.freeze);
+    bookings.forEach(Object.freeze);
+    Object.freeze(users);
+    Object.freeze(bookings);
+    const snapshot = Object.freeze({ users, bookings, lastIssuedId });
     this.cached = { raw, snapshot };
     return snapshot;
   }
@@ -149,7 +154,7 @@ export class LocalData {
       return { user: null, sessionReset };
     }
     const user = users.find((candidate) => candidate.userId === userId);
-    if (user) return { user, sessionReset: false };
+    if (user) return { user: { ...user }, sessionReset: false };
     if (!this.readOnly) this.session.write(STORAGE_KEYS.session, null);
     return { user: null, sessionReset: true };
   }

@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createApplication } from '../infrastructure/create-application';
-import { STORAGE_KEYS } from '../infrastructure/repositories/local-data';
+import { LocalBookingRepository } from '../infrastructure/repositories/local-repositories';
+import {
+  LocalData,
+  STORAGE_KEYS,
+} from '../infrastructure/repositories/local-data';
 
 class MemoryStorage implements Storage {
   private readonly items = new Map<string, string>();
@@ -405,12 +409,12 @@ describe('browser application boundary', () => {
     expect(await app.cancelBooking(1)).toMatchObject({ ok: true });
   });
 
-  it('reuses validated users until raw storage changes and validates external revisions before commit', async () => {
+  it('keeps equivalent read models until raw storage changes and validates external revisions before commit', async () => {
     const app = createApplication(local, session, () => 0);
     await app.login('a@example.com');
     const first = await app.getUsers();
     const second = await app.getUsers();
-    expect(first.ok && second.ok && first.value === second.value).toBe(true);
+    expect(first).toEqual(second);
     await app.createBooking(command);
     const external = createApplication(local, session, () => 0);
     await external.cancelBooking(1);
@@ -429,5 +433,112 @@ describe('browser application boundary', () => {
     expect(
       await app.createBooking({ ...command, resourceId: 'room-2' }),
     ).toMatchObject({ error: { code: 'STORAGE_CORRUPTED' } });
+  });
+  it('keeps query-result edits out of trusted ownership, IDs and stored records', async () => {
+    const app = createApplication(local, session, () => 0);
+    const owner = await app.login('owner@example.com');
+    await app.createBooking(command);
+    const other = await app.login('other@example.com');
+    const listed = await app.listBookings();
+    const users = await app.getUsers();
+    const identity = await app.getCurrentUser();
+    const initialized = await app.initialize();
+    if (
+      !owner.ok ||
+      !other.ok ||
+      !listed.ok ||
+      !users.ok ||
+      !identity.ok ||
+      !identity.value ||
+      !initialized.ok ||
+      !initialized.value.user
+    )
+      throw new Error('Expected initialized fixtures');
+    const before = local.snapshot();
+    listed.value[0].userId = other.value.userId;
+    listed.value[0].id = 900;
+    users.value[0].userId = other.value.userId;
+    users.value[0].email = 'changed@example.com';
+    users.value.length = 0;
+    identity.value.userId = owner.value.userId;
+    initialized.value.user.email = 'changed@example.com';
+    expect(await app.getCurrentUser()).toEqual(other);
+    expect(await app.cancelBooking(1)).toMatchObject({
+      error: { code: 'NOT_BOOKING_OWNER' },
+    });
+    expect(await app.listBookings()).toMatchObject({
+      ok: true,
+      value: [{ id: 1, userId: owner.value.userId, status: 'active' }],
+    });
+    expect(local.snapshot()).toBe(before);
+    expect(
+      await app.createBooking({ ...command, resourceId: 'room-2' }),
+    ).toMatchObject({ ok: true, value: { id: 2, userId: other.value.userId } });
+  });
+
+  it('detaches availability and idempotent cancellation records from the validated cache', async () => {
+    const app = createApplication(local, session, () => 0);
+    await app.login('owner@example.com');
+    await app.createBooking(command);
+    const availability = await app.checkAvailability(
+      command.resourceId,
+      command.startAt,
+      command.endAt,
+    );
+    if (!availability.ok) throw new Error('Expected availability');
+    availability.value.conflicts[0].id = 900;
+    availability.value.conflicts[0].startAt = -1;
+    const rejected = await app.createBooking(command);
+    if (rejected.ok || !rejected.error.details?.conflicts)
+      throw new Error('Expected conflict');
+    rejected.error.details.conflicts[0].id = 901;
+    rejected.error.details.conflicts[0].startAt = -2;
+
+    expect(
+      await app.checkAvailability(
+        command.resourceId,
+        command.startAt,
+        command.endAt,
+      ),
+    ).toMatchObject({
+      ok: true,
+      value: { conflicts: [{ id: 1, startAt: command.startAt }] },
+    });
+    await app.cancelBooking(1);
+    const repeated = await app.cancelBooking(1);
+    if (!repeated.ok) throw new Error('Expected idempotent cancellation');
+    repeated.value.booking.id = 900;
+    const before = local.snapshot();
+    expect(await app.createBooking(command)).toMatchObject({
+      ok: true,
+      value: { id: 2 },
+    });
+    expect(await app.listBookings()).toMatchObject({
+      ok: true,
+      value: [
+        { id: 1, status: 'cancelled' },
+        { id: 2, status: 'active' },
+      ],
+    });
+    expect(before).not.toContain('900');
+  });
+
+  it('detaches repository detail results before enforcing cancellation ownership', async () => {
+    const app = createApplication(local, session, () => 0);
+    await app.login('owner@example.com');
+    await app.createBooking(command);
+    const other = await app.login('other@example.com');
+    const repository = new LocalBookingRepository(
+      new LocalData(local, session),
+      () => 0,
+    );
+    const detail = await repository.getById(1);
+    if (!other.ok || !detail) throw new Error('Expected fixtures');
+    detail.userId = other.value.userId;
+    const before = local.snapshot();
+    expect(await repository.cancel(1, other.value.userId)).toMatchObject({
+      error: { code: 'NOT_BOOKING_OWNER' },
+    });
+    expect(local.snapshot()).toBe(before);
   });
 });

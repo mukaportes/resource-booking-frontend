@@ -372,3 +372,174 @@ test('history renders bounded pages, retains records and supplies only overlappi
     ),
   ).toBe(true);
 });
+
+test('validation identifies the responsible field and the picker reopens on the viewed month', async ({
+  page,
+}) => {
+  await openWorkspace(page, '?view=week&date=2027-03-14');
+  const dateTrigger = page.getByRole('button', {
+    name: 'Choose schedule date',
+  });
+  await dateTrigger.click();
+  await expect(page.locator('.atlas-date-picker')).toContainText('March 2027');
+  await page.getByRole('button', { name: /next month/i }).click();
+  await expect(page.locator('.atlas-date-picker')).toContainText('April 2027');
+  await page.keyboard.press('Escape');
+  await expect(dateTrigger).toBeFocused();
+  await dateTrigger.click();
+  await expect(page.locator('.atlas-date-picker')).toContainText('March 2027');
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '＋ New booking' }).click();
+  const resource = page.getByLabel('Resource', { exact: true });
+  await expect(resource).toHaveAttribute('aria-invalid', 'true');
+  await expect(resource).toHaveAttribute(
+    'aria-describedby',
+    'booking-error-resourceId',
+  );
+  await expect(page.getByLabel('Start date', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'false',
+  );
+  await expect(page.getByLabel('Start time', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'false',
+  );
+  await expect(page.getByLabel('End date', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'false',
+  );
+  await expect(page.getByLabel('End time', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'false',
+  );
+  await resource.selectOption('room-1');
+  await page.getByLabel('End time', { exact: true }).fill('08:30');
+  await expect(resource).toHaveAttribute('aria-invalid', 'false');
+  await expect(page.getByLabel('Start time', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'false',
+  );
+  await expect(page.getByLabel('End time', { exact: true })).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+  await expect(page.getByLabel('End time', { exact: true })).toHaveAttribute(
+    'aria-describedby',
+    'booking-error-endTime',
+  );
+  await accessible(page);
+});
+
+test('the shared week shows readable bounded entries, preserves filters and opens keyboard details at desktop and 360px', async ({
+  page,
+}) => {
+  await openWorkspace(page, '?view=week&date=2027-01-12');
+  await page.evaluate(() => {
+    const users = JSON.parse(
+      localStorage.getItem('resourceBooking:v1:users')!,
+    ).items;
+    users[0].email = 'very.long.owner.name.for.resource.scheduling@example.com';
+    const resources = [
+      'room-1',
+      'room-2',
+      'room-3',
+      'computer-1',
+      'computer-2',
+      'tablet-1',
+      'tablet-2',
+    ];
+    const items = resources.map((resourceId, index) => ({
+      id: index + 1,
+      resourceId,
+      userId: users[0].userId,
+      startAt: Date.parse('2027-01-12T10:00:00Z'),
+      endAt: Date.parse('2027-01-12T11:00:00Z'),
+      status: 'active',
+      createdAt: 0,
+      cancelledAt: null,
+    }));
+    items.push({
+      ...items[0],
+      id: 8,
+      startAt: Date.parse('2027-01-19T10:00:00Z'),
+      endAt: Date.parse('2027-01-19T11:00:00Z'),
+    });
+    localStorage.setItem(
+      'resourceBooking:v1:users',
+      JSON.stringify({ schemaVersion: 1, items: users }),
+    );
+    localStorage.setItem(
+      'resourceBooking:v1:bookings',
+      JSON.stringify({ schemaVersion: 1, items }),
+    );
+    localStorage.setItem(
+      'resourceBooking:v1:bookingSequence',
+      JSON.stringify({ schemaVersion: 1, lastIssuedId: 8 }),
+    );
+  });
+  await page.reload();
+  await expect(
+    page.getByRole('heading', { name: 'Shared week overview' }),
+  ).toBeVisible();
+  await expect(page.locator('.agenda-booking')).toHaveCount(7);
+  await expect(
+    page.getByRole('button', { name: 'Details for booking 7', exact: true }),
+  ).toContainText('Tablet 2');
+  await expect(
+    page.getByRole('button', { name: 'Details for booking 8', exact: true }),
+  ).toHaveCount(0);
+  await expect(page.locator('.agenda-booking').first()).toContainText(
+    'very.long.owner.name.for.resource.scheduling@example.com',
+  );
+  const entry = page.getByRole('button', {
+    name: 'Details for booking 1',
+    exact: true,
+  });
+  await expect(entry).toHaveAccessibleDescription(/Room 1/);
+  await entry.focus();
+  await page.keyboard.press('Enter');
+  await expect(
+    page.getByRole('dialog', { name: 'Booking #1', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Close', exact: true }).click();
+  await expect(entry).toBeFocused();
+  await accessible(page);
+  await page.screenshot({
+    path: 'docs/m06-final-evidence/shared-week-desktop.png',
+    fullPage: true,
+  });
+  await page.setViewportSize({ width: 360, height: 800 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  expect(await entry.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await accessible(page);
+  await page.screenshot({
+    path: 'docs/m06-final-evidence/shared-week-mobile.png',
+    fullPage: true,
+  });
+  await entry.focus();
+  await page.keyboard.press('Space');
+  await page
+    .getByRole('button', { name: 'Cancel booking', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Confirm cancellation' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'The schedule', exact: true }),
+  ).toBeFocused();
+  await expect(
+    page.getByRole('button', { name: 'Details for booking 1', exact: true }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: /Room 2 Rooms/ }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Shared week overview' }),
+  ).toHaveCount(0);
+  await expect(page.locator('.fc-timegrid-body')).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Booking #2,/ })).toHaveCount(
+    1,
+  );
+});

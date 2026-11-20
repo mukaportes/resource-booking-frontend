@@ -64,6 +64,7 @@ export function ScheduleToolbar({
             <Calendar
               mode="single"
               selected={date}
+              defaultMonth={date}
               onSelect={(selected) => {
                 if (selected) update({ date: toDateInput(selected) });
               }}

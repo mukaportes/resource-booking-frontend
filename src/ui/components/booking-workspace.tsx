@@ -13,6 +13,7 @@ import {
 } from '../lib/time';
 import { BookingDetails } from './booking-details';
 import { BookingDialog, type BookingSelection } from './booking-dialog';
+import { BookingAgenda } from './booking-agenda';
 import { BookingTable } from './booking-table';
 import { ResourceFilter } from './resource-filter';
 import { ResourceIcon } from './resource-icon';
@@ -153,7 +154,9 @@ export function BookingWorkspace() {
           className="schedule-section"
           aria-labelledby="schedule-heading"
         >
-          <h2 id="schedule-heading">The schedule</h2>
+          <h2 id="schedule-heading" tabIndex={-1}>
+            The schedule
+          </h2>
           <ScheduleToolbar
             state={state}
             update={update}
@@ -177,6 +180,14 @@ export function BookingWorkspace() {
             <BookingTable
               key={`${state.resourceIds.join(',')}:${state.mine}`}
               bookings={filtered}
+              users={users}
+              userId={user?.userId ?? ''}
+              onBooking={setDetails}
+            />
+          ) : state.view === 'week' && state.resourceIds.length > 1 ? (
+            <BookingAgenda
+              key={`${state.date}:${state.resourceIds.join(',')}:${state.mine}:${state.showCancelled}`}
+              bookings={calendarBookings}
               users={users}
               userId={user?.userId ?? ''}
               onBooking={setDetails}
