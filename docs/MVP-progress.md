@@ -4,13 +4,13 @@ Source: [PRD-resource-booking.md](PRD-resource-booking.md), §17. UI: [Resource 
 
 Updated: 2026-11-20. Delivery means implemented, verified and published for review; deployment is outside scope. Native GitHub stack **#6** contains the milestone PRs and lands on `main`.
 
-| Code | Milestone                                   | Status                            | Branch                       | Dependency | PR                                                                   | Verification                                                          |
-| ---- | ------------------------------------------- | --------------------------------- | ---------------------------- | ---------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| M01  | Domain core + tests                         | Complete — merged                 | `feat/M01-domain-core`       | —          | [#1](https://github.com/mukaportes/resource-booking-frontend/pull/1) | 25 tests; typecheck/lint; GitHub CI passed                            |
-| M02  | Storage adapter, repositories and use cases | Complete — merged                 | `feat/M02-storage-use-cases` | M01        | [#2](https://github.com/mukaportes/resource-booking-frontend/pull/2) | 41 tests; typecheck/lint; GitHub CI passed                            |
-| M03  | Login, session, app shell and toasts        | Complete — PR open                | `feat/M03-session-app-shell` | M02        | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed |
-| M04  | Calendar, filters, booking modals and list  | Complete — PR open                | `feat/M04-booking-workspace` | M03        | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed                      |
-| M05  | Accessibility, resilience, README and demo  | Verification passed — awaiting CI | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; CI pending    |
+| Code | Milestone                                   | Status                         | Branch                       | Dependency | PR                                                                   | Verification                                                             |
+| ---- | ------------------------------------------- | ------------------------------ | ---------------------------- | ---------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| M01  | Domain core + tests                         | Complete — merged              | `feat/M01-domain-core`       | —          | [#1](https://github.com/mukaportes/resource-booking-frontend/pull/1) | 25 tests; typecheck/lint; GitHub CI passed                               |
+| M02  | Storage adapter, repositories and use cases | Complete — merged              | `feat/M02-storage-use-cases` | M01        | [#2](https://github.com/mukaportes/resource-booking-frontend/pull/2) | 41 tests; typecheck/lint; GitHub CI passed                               |
+| M03  | Login, session, app shell and toasts        | Complete — merged              | `feat/M03-session-app-shell` | M02        | [#3](https://github.com/mukaportes/resource-booking-frontend/pull/3) | 47 tests; typecheck/lint/build; browser login smoke; GitHub CI passed    |
+| M04  | Calendar, filters, booking modals and list  | Complete — merged              | `feat/M04-booking-workspace` | M03        | [#4](https://github.com/mukaportes/resource-booking-frontend/pull/4) | 55 tests; typecheck/lint/build; GitHub CI passed                         |
+| M05  | Accessibility, resilience, README and demo  | Complete — PR ready for review | `feat/M05-polish-demo`       | M04        | [#5](https://github.com/mukaportes/resource-booking-frontend/pull/5) | 55 tests; 7/7 Chromium scenarios; typecheck/lint/build; GitHub CI passed |
 
 ## Acceptance and delivery
 
@@ -19,7 +19,7 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 - M03: FR-U1–U6, gated empty shell, Atlas primitives, feedback and typed storage recovery.
 - M04: FR-A/B/C/L, day/week FullCalendar, shared URL filters, create/details/cancel workflows and list history.
 - M05: challenge README/demo, route/root error boundaries, contrast, browser CI and keyboard/mobile acceptance.
-- Dependent PRs form a native GitHub stack rooted at `main`; the stack retargets as lower layers merge. M01 and M02 were merged on GitHub during delivery; the agent did not merge them.
+- Dependent PRs form a native GitHub stack rooted at `main`; the stack retargets as lower layers merge. M01–M04 were merged on GitHub during delivery; the agent did not merge them.
 
 ## Final verification
 
@@ -36,4 +36,8 @@ Updated: 2026-11-20. Delivery means implemented, verified and published for revi
 
 Started: 2026-11-20 07:55 America/Sao_Paulo. The skill's initial two M05 repair cycles reached a calendar accessibility boundary. The user explicitly authorized one additional targeted cycle; it passed. The fix focuses FullCalendar's existing day grid cells through `dayCellDidMount`, retaining its ARIA grid hierarchy and native keyboard scrolling.
 
-The front-end MVP retains the PRD's fake identity, per-browser storage and multi-tab concurrency limitations. Backend, deployment and production operational acceptance were not performed. CI for the final published revision must pass before M05 is marked complete.
+The front-end MVP retains the PRD's fake identity, per-browser storage and multi-tab concurrency limitations. Backend, deployment and production operational acceptance were not performed. The implementation CI passed: [GitHub Actions run 44728628284](https://github.com/mukaportes/resource-booking-frontend/actions/runs/44728628284). Final PR checks remain visible on PR #5.
+
+Time spent: approximately 45 minutes elapsed, including verification and the repair-authorization pause. No deployment was performed.
+
+UI evidence: [Desktop Atlas capture](mvp-resource-atlas-desktop.png) · [360 px Atlas capture](mvp-resource-atlas-mobile.png).

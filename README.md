@@ -77,6 +77,6 @@ Milestones M01–M05 follow PRD §17 with one branch and PR per milestone. Depen
 
 AI agents implemented the domain, persistence/application layer, and UI in parallel against the PRD and shared contracts. Changes were integrated, typechecked, linted, exercised through rule and UI tests, and compared visually with the selected preview. Generated code was reviewed against the storage, ownership and dependency contracts. Automated accessibility checks are evidence for their tested states, not a claim of complete WCAG certification.
 
-Time spent and final verification evidence are recorded in the progress tracker at delivery. Backend, deployment and production operational acceptance are outside this MVP.
+Time spent: approximately 45 minutes elapsed, including verification and the repair-authorization pause. Final verification evidence is recorded in the progress tracker. Backend, deployment and production operational acceptance are outside this MVP.
 
 Verification: typecheck, lint, production build, 55 unit/integration tests and all seven Chromium scenarios passed. See [MVP progress](docs/MVP-progress.md) for final PR/CI status and [acceptance evidence](docs/MVP-acceptance.md) for scope and limits.

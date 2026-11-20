@@ -25,3 +25,5 @@ Browser acceptance runs in Chromium. Automated axe checks cover exercised login/
 ## Final browser evidence
 
 All seven Chromium scenarios passed on 2026-11-20, including native keyboard scrolling through a focusable day grid cell and Enter/Space booking details with focus restoration. Login, empty mobile calendar and populated calendar axe scans reported no serious/critical findings. Typecheck, lint, 55 unit/integration tests and the production build passed. The progress tracker records final publication/CI state.
+
+Implementation CI passed: [run 44728628284](https://github.com/mukaportes/resource-booking-frontend/actions/runs/44728628284). Visual evidence: [desktop](mvp-resource-atlas-desktop.png) and [360 px](mvp-resource-atlas-mobile.png).
