@@ -4,8 +4,8 @@ function log(
   level: 'debug' | 'info' | 'warn' | 'error',
   message: string,
   metadata?: LogMetadata,
+  correlationId = crypto.randomUUID(),
 ) {
-  const correlationId = crypto.randomUUID();
   console[level](
     `[resource-booking:${correlationId}] ${message}`,
     metadata ?? {},
@@ -20,6 +20,6 @@ export const logger = {
     log('info', message, metadata),
   warn: (message: string, metadata?: LogMetadata) =>
     log('warn', message, metadata),
-  error: (message: string, metadata?: LogMetadata) =>
-    log('error', message, metadata),
+  error: (message: string, metadata?: LogMetadata, correlationId?: string) =>
+    log('error', message, metadata, correlationId),
 };

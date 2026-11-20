@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useApplication } from '../hooks/use-application';
+import { exportRecoveryData } from '../lib/export-recovery';
 import { notify } from '../lib/notifications';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -22,19 +23,7 @@ export function StorageRecovery() {
 
   async function exportData() {
     if (!app) return;
-    const result = await app.exportRawData();
-    if (!result.ok) {
-      notify.error(result.error);
-      return;
-    }
-    const url = URL.createObjectURL(
-      new Blob([result.value], { type: 'application/json' }),
-    );
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = 'resource-booking-recovery.json';
-    anchor.click();
-    URL.revokeObjectURL(url);
+    await exportRecoveryData(app);
   }
 
   async function resetData() {

@@ -1,0 +1,9 @@
+
+ RUN  v5.1.1 /Users/muriloportescheller/Documents/dev-work/interview/alvorada/resource-booking-frontend
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+   Start at  10:27:40
+   Duration  632ms (environment 87%, import 9%, transform 3%, tests 1%)
+

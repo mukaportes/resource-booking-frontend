@@ -4,10 +4,8 @@ package-lock.json
 playwright-report
 test-results
 
-# Preserve product reference artifacts verbatim
-docs/PRD-resource-booking.md
-docs/UI-resource-atlas.md
-docs/resource-booking-design-preview.html
+# Preserve documentation and evidence artifacts verbatim
+docs/
 
 # Next.js regenerates this file
 next-env.d.ts

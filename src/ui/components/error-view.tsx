@@ -1,14 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { logger } from '../../infrastructure/logger';
+import { reportUnexpected } from '../../infrastructure/logger/diagnostics';
 
-export function ErrorView({ retry }: { retry: () => void }) {
+export function ErrorView({
+  error,
+  retry,
+}: {
+  error: unknown;
+  retry: () => void;
+}) {
   const [reference] = useState(() => crypto.randomUUID());
   const [copyMessage, setCopyMessage] = useState('');
   useEffect(() => {
-    logger.error('Unhandled rendering failure', { correlationId: reference });
-  }, [reference]);
+    reportUnexpected(error, 'ui.render', reference);
+  }, [error, reference]);
   async function copyDetails() {
     try {
       await navigator.clipboard.writeText(

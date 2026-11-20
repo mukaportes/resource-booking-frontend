@@ -16,7 +16,7 @@ import {
   toTimeInput,
 } from '../lib/time';
 import { Button } from './ui/button';
-import { BookingFormFields } from './booking-form-fields';
+import { BookingFormFields, type BookingFields } from './booking-form-fields';
 import { BookingAvailability } from './booking-availability';
 import {
   Dialog,
@@ -39,7 +39,7 @@ export function BookingDialog({
   selection: BookingSelection;
   onClose: () => void;
 }) {
-  const { app, users, refresh } = useApplication();
+  const { app, users, refresh, readOnly, revision } = useApplication();
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 15_000);
@@ -59,17 +59,24 @@ export function BookingDialog({
   const startAt = toEpochMs(fields.startDate, fields.startTime);
   const endAt = toEpochMs(fields.endDate, fields.endTime);
   const resource = resourceIdSchema.safeParse(fields.resourceId);
-  const invalid = !resource.success
-    ? 'Choose a resource.'
-    : !Number.isFinite(startAt) || !Number.isFinite(endAt)
-      ? 'Enter a valid start and end.'
-      : endAt <= startAt
-        ? 'End time must be after start time.'
-        : startAt % SLOT_MS || endAt % SLOT_MS
-          ? 'Choose times on the 30-minute grid.'
-          : startAt < now
-            ? 'Choose a start time in the future.'
-            : '';
+  const fieldErrors: Partial<Record<keyof BookingFields, string>> = {};
+  if (!resource.success) fieldErrors.resourceId = 'Choose a resource.';
+  if (!Number.isFinite(startAt)) {
+    fieldErrors.startDate = fieldErrors.startTime =
+      'This local date or time does not exist. Choose a valid start.';
+  } else if (startAt % SLOT_MS)
+    fieldErrors.startTime = 'Choose times on the 30-minute grid.';
+  else if (startAt < now)
+    fieldErrors.startTime = 'Choose a start time in the future.';
+  if (!Number.isFinite(endAt)) {
+    fieldErrors.endDate = fieldErrors.endTime =
+      'This local date or time does not exist. Choose a valid end.';
+  } else if (Number.isFinite(startAt) && endAt <= startAt) {
+    fieldErrors.endDate = fieldErrors.endTime =
+      'End time must be after start time.';
+  } else if (endAt % SLOT_MS)
+    fieldErrors.endTime = 'Choose times on the 30-minute grid.';
+  const invalid = Object.values(fieldErrors)[0] ?? '';
   const result = useBookingAvailability(
     app,
     fields.resourceId,
@@ -77,6 +84,7 @@ export function BookingDialog({
     endAt,
     invalid,
     refresh,
+    revision,
   );
   const dirty = Object.entries(fields).some(
     ([name, value]) => value !== initial[name as keyof typeof initial],
@@ -94,6 +102,7 @@ export function BookingDialog({
     event.preventDefault();
     if (
       !app ||
+      readOnly ||
       invalid ||
       submitting ||
       !result?.ok ||
@@ -120,7 +129,10 @@ export function BookingDialog({
           )
         )
           notify.error(created.error);
-        else setSubmitError(created.error);
+        else {
+          setSubmitError(created.error);
+          if (created.error.code === 'TIME_SLOT_CONFLICT') await refresh();
+        }
         return;
       }
       await refresh();
@@ -135,8 +147,10 @@ export function BookingDialog({
       setSubmitting(false);
     }
   }
+  const visibleSubmitError =
+    submitError?.code === 'TIME_SLOT_CONFLICT' && result ? null : submitError;
   const conflicts =
-    submitError?.details?.conflicts ??
+    visibleSubmitError?.details?.conflicts ??
     (result?.ok ? result.value.conflicts : []);
   return (
     <Dialog
@@ -180,17 +194,24 @@ export function BookingDialog({
               fields={fields}
               update={update}
               startAt={startAt}
+              errors={fieldErrors}
             />
+            {!invalid && (
+              <p className="muted text-small">
+                Resolved local time: {formatRange(startAt, endAt)}. Repeated
+                times use your browser’s native resolution.
+              </p>
+            )}
             <BookingAvailability
               invalid={invalid}
-              submitError={submitError}
+              submitError={visibleSubmitError}
               result={result}
               conflicts={conflicts}
               users={users}
             />
-            {submitError && (
+            {visibleSubmitError && (
               <p role="alert" className="field-error">
-                {submitError.message}
+                {visibleSubmitError.message}
               </p>
             )}
             <DialogFooter>
@@ -200,11 +221,12 @@ export function BookingDialog({
               <Button
                 type="submit"
                 disabled={
+                  readOnly ||
                   Boolean(invalid) ||
                   !result?.ok ||
                   !result.value.isAvailable ||
                   submitting ||
-                  Boolean(submitError)
+                  Boolean(visibleSubmitError)
                 }
               >
                 {submitting ? 'Booking…' : 'Book'}

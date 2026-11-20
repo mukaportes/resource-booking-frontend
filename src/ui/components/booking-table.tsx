@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { RESOURCES, type Booking, type User } from '../../domain';
 import { formatDateTime } from '../lib/time';
 import { Button } from './ui/button';
@@ -14,9 +14,21 @@ export function BookingTable({
   onBooking: (booking: Booking) => void;
 }) {
   const [sort, setSort] = useState<'start' | 'id'>('start');
-  const sorted = [...bookings].sort((a, b) =>
-    sort === 'id' ? a.id - b.id : a.startAt - b.startAt || a.id - b.id,
+  const [page, setPage] = useState(0);
+  const sorted = useMemo(
+    () =>
+      [...bookings].sort((a, b) =>
+        sort === 'id' ? a.id - b.id : a.startAt - b.startAt || a.id - b.id,
+      ),
+    [bookings, sort],
   );
+  const owners = useMemo(
+    () => new Map(users.map((user) => [user.userId, user.email])),
+    [users],
+  );
+  const pageCount = Math.max(1, Math.ceil(sorted.length / 50));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = sorted.slice(currentPage * 50, (currentPage + 1) * 50);
   return (
     <div className="table-wrap">
       <table className="booking-table">
@@ -29,7 +41,10 @@ export function BookingTable({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSort('id')}
+                onClick={() => {
+                  setSort('id');
+                  setPage(0);
+                }}
                 aria-pressed={sort === 'id'}
               >
                 ID ↑
@@ -41,7 +56,10 @@ export function BookingTable({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSort('start')}
+                onClick={() => {
+                  setSort('start');
+                  setPage(0);
+                }}
                 aria-pressed={sort === 'start'}
               >
                 Start ↑
@@ -53,7 +71,7 @@ export function BookingTable({
           </tr>
         </thead>
         <tbody>
-          {sorted.map((booking) => (
+          {visible.map((booking) => (
             <tr key={booking.id}>
               <td>#{booking.id}</td>
               <td>
@@ -64,8 +82,7 @@ export function BookingTable({
                 }
               </td>
               <td>
-                {users.find((user) => user.userId === booking.userId)?.email ??
-                  'Unknown owner'}
+                {owners.get(booking.userId) ?? 'Unknown owner'}
                 {booking.userId === userId && (
                   <small className="owner-label">You</small>
                 )}
@@ -91,6 +108,27 @@ export function BookingTable({
           ))}
         </tbody>
       </table>
+      <nav aria-label="Booking history pages" className="history-pagination">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage === 0}
+          onClick={() => setPage(currentPage - 1)}
+        >
+          Previous page
+        </Button>
+        <span role="status">
+          Page {currentPage + 1} of {pageCount} · {sorted.length} bookings
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={currentPage + 1 >= pageCount}
+          onClick={() => setPage(currentPage + 1)}
+        >
+          Next page
+        </Button>
+      </nav>
       {!sorted.length && (
         <p className="empty-state">No bookings match this view.</p>
       )}

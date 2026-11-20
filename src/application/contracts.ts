@@ -9,7 +9,9 @@ import type { BookingFilter } from '../domain';
 export type { BookingFilter } from '../domain';
 
 export interface BookingApplication {
-  initialize(): Promise<Result<{ user: User | null; sessionReset: boolean }>>;
+  initialize(): Promise<
+    Result<{ user: User | null; sessionReset: boolean; readOnly?: boolean }>
+  >;
   login(email: unknown): Promise<Result<User>>;
   logout(): Promise<Result<void>>;
   getCurrentUser(): Promise<Result<User | null>>;

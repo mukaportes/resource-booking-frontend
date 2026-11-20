@@ -12,7 +12,7 @@ import {
 import type { BookingApplication } from '../../application';
 import { createApplication } from '../../infrastructure/create-application';
 import type { Booking, DomainError, User } from '../../domain';
-import { logger } from '../../infrastructure/logger';
+import { reportUnexpected } from '../../infrastructure/logger/diagnostics';
 import { notify } from '../lib/notifications';
 
 interface ApplicationContextValue {
@@ -20,6 +20,8 @@ interface ApplicationContextValue {
   user: User | null;
   bookings: Booking[];
   users: User[];
+  readOnly: boolean;
+  revision: number;
   loading: boolean;
   error: DomainError | null;
   refresh: () => Promise<void>;
@@ -32,6 +34,8 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [readOnly, setReadOnly] = useState(false);
+  const [revision, setRevision] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<DomainError | null>(null);
   const instance = useRef<BookingApplication | null>(null);
@@ -40,14 +44,19 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     const current = instance.current;
     if (!current) return;
-    const identity = await current.getCurrentUser();
+    const identity = await current.initialize();
     if (!mounted.current) return;
     if (!identity.ok) {
       setError(identity.error);
       return;
     }
-    setUser(identity.value);
-    if (!identity.value) {
+    setUser(identity.value.user);
+    setReadOnly(Boolean(identity.value.readOnly));
+    if (identity.value.sessionReset)
+      notify.info(
+        'Your saved session was reset. Bookings were kept. Please identify yourself again.',
+      );
+    if (!identity.value.user && !identity.value.readOnly) {
       setBookings([]);
       setUsers([]);
       setError(null);
@@ -69,6 +78,7 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     setBookings(bookingResult.value);
     setUsers(userResult.value);
     setError(null);
+    setRevision((value) => value + 1);
   }, []);
 
   useEffect(() => {
@@ -79,19 +89,10 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
     async function initialize() {
       if (!current) return;
       try {
-        const result = await current.initialize();
         if (!active) return;
-        if (!result.ok) {
-          setError(result.error);
-          return;
-        }
-        if (result.value.sessionReset)
-          notify.info(
-            'Your saved session was reset. Please identify yourself again.',
-          );
         await refresh();
-      } catch {
-        const correlationId = logger.error('Application initialization failed');
+      } catch (error) {
+        const correlationId = reportUnexpected(error, 'ui.initialize');
         if (active)
           setError({
             code: 'UNEXPECTED_ERROR',
@@ -143,7 +144,17 @@ export function ApplicationProvider({ children }: { children: ReactNode }) {
 
   return (
     <ApplicationContext.Provider
-      value={{ app, user, bookings, users, loading, error, refresh }}
+      value={{
+        app,
+        user,
+        bookings,
+        users,
+        readOnly,
+        revision,
+        loading,
+        error,
+        refresh,
+      }}
     >
       {children}
     </ApplicationContext.Provider>

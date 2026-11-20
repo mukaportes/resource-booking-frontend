@@ -22,6 +22,7 @@ export function BookingAvailability({
 }) {
   return (
     <div
+      id="booking-validation"
       aria-live="polite"
       className={`availability ${conflicts.length ? 'unavailable' : ''}`}
     >

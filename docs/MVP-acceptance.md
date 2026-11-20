@@ -22,8 +22,12 @@ The scope is the front-end MVP in PRD §17, using Resource Atlas option 04. Back
 
 Browser acceptance runs in Chromium. Automated axe checks cover exercised login/workspace/mobile states and do not certify every WCAG criterion. Keyboard paths, modal focus, 360 px overflow and drag selection are exercised separately. Local storage has the documented browser/tab and concurrency limitations; this is not production authentication or backend acceptance.
 
-## Final browser evidence
+## M01–M05 browser evidence (historical)
 
 All seven Chromium scenarios passed on 2026-11-20, including native keyboard scrolling through a focusable day grid cell and Enter/Space booking details with focus restoration. Login, empty mobile calendar and populated calendar axe scans reported no serious/critical findings. Typecheck, lint, 55 unit/integration tests and the production build passed. The progress tracker records final publication/CI state.
 
 Implementation CI passed: [run 44728628284](https://github.com/mukaportes/resource-booking-frontend/actions/runs/44728628284). Visual evidence: [desktop](mvp-resource-atlas-desktop.png) and [360 px](mvp-resource-atlas-mobile.png).
+
+## M06 remediation acceptance
+
+All seven original work packages and all four follow-up findings are resolved; see the [final focused audit](Excellence-Bar-Final-M06.md) and [M06 evidence](M06-acceptance.md). Current local verification: 68 tests across nine files, typecheck/lint/build and 16 production Chromium scenarios pass. Repair-source CI passes and M06 is complete/published for review; current documentation-head checks remain visible on PR #7 and in the progress tracker. Negative application probes prove query edits cannot alter trusted ownership, bytes or IDs. Shared-week desktop/360 px, long-label, active/cancelled, keyboard/focus and relevant axe states are verified, alongside the existing time/storage/revision cases. The 4/4/4 focused assessment is grounded in behavior, visuals and measurements; no merge, deployment, independent endorsement or production operational acceptance is inferred.

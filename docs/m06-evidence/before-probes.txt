@@ -1,0 +1,31 @@
+NEW_BOOKING_DATE 2027-01-11 visible schedule date=2027-03-14
+DST_FORM 02:00 02:30
+DST_STORED [
+  {
+    start: 'Sun Mar 14 2027 03:00:00 GMT-0400 (Eastern Daylight Time)',
+    end: 'Sun Mar 14 2027 03:30:00 GMT-0400 (Eastern Daylight Time)'
+  }
+]
+EXTERNAL_CONFLICT_ADVISORY ✓ Available
+COMMIT_CONFLICT #1 · Room 1 · audit@example.com
+Jan 12, 2027, 10:00 AM – 11:00 AM
+SESSION_CORRUPTION Your saved data needs attention
+
+Stored records are inconsistent. Export them or reset local data.
+
+Export a copy before resetting. Resetting permanently removes this browser’s bookings, users and session.
+
+Export raw data
+Type RESET to confirm
+Reset local data
+
+STORAGE_CORRUPTED
+FULL_STORAGE The workspace can’t access its data
+
+Browser storage is unavailable. Allow site data or disable private mode.
+
+Allow site data in your browser settings, disable private browsing if needed, then try again.
+
+Reload workspace
+
+STORAGE_UNAVAILABLE

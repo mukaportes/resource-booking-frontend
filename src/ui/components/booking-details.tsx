@@ -24,12 +24,17 @@ export function BookingDetails({
   booking: Booking;
   onClose: () => void;
 }) {
-  const { app, user, users, refresh } = useApplication();
+  const { app, user, users, refresh, readOnly } = useApplication();
+  const [trigger] = useState(() =>
+    document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null,
+  );
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const resource = RESOURCES.find((item) => item.id === booking.resourceId);
   async function cancel() {
-    if (!app || submitting) return;
+    if (!app || submitting || readOnly) return;
     setSubmitting(true);
     try {
       const result = await app.cancelBooking(booking.id);
@@ -62,7 +67,14 @@ export function BookingDetails({
         if (!open && !submitting) onClose();
       }}
     >
-      <DialogContent>
+      <DialogContent
+        onCloseAutoFocus={(event) => {
+          if (!trigger?.isConnected) {
+            event.preventDefault();
+            document.getElementById('schedule-heading')?.focus();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>
             {confirming
@@ -104,7 +116,8 @@ export function BookingDetails({
           >
             {confirming ? 'Keep booking' : 'Close'}
           </Button>
-          {booking.userId === user?.userId &&
+          {!readOnly &&
+            booking.userId === user?.userId &&
             booking.status === BookingStatus.Active && (
               <Button
                 variant="destructive"

@@ -27,6 +27,8 @@ beforeEach(async () => {
     users: [user],
     bookings: [],
     loading: false,
+    readOnly: false,
+    revision: 0,
     error: null,
     refresh: vi.fn(async () => {}),
   });
@@ -58,6 +60,29 @@ describe('booking submission', () => {
   });
   it('preserves inputs and explains a conflict detected only at commit time', async () => {
     const onClose = vi.fn();
+    vi.spyOn(app, 'checkAvailability')
+      .mockResolvedValueOnce({
+        ok: true,
+        value: { isAvailable: true, conflicts: [] },
+      })
+      .mockResolvedValue({
+        ok: true,
+        value: {
+          isAvailable: false,
+          conflicts: [
+            {
+              id: 7,
+              resourceId: 'room-1',
+              userId: user.userId,
+              startAt,
+              endAt: startAt + SLOT_MS,
+              status: BookingStatus.Active,
+              createdAt: 0,
+              cancelledAt: null,
+            },
+          ],
+        },
+      });
     vi.spyOn(app, 'createBooking').mockResolvedValue(
       failure('TIME_SLOT_CONFLICT', 'This slot was just booked.', {
         conflicts: [
@@ -74,7 +99,7 @@ describe('booking submission', () => {
         ],
       }),
     );
-    render(
+    const { rerender } = render(
       <BookingDialog
         selection={{ startAt, endAt: startAt + SLOT_MS, resourceId: 'room-1' }}
         onClose={onClose}
@@ -83,8 +108,18 @@ describe('booking submission', () => {
     const book = screen.getByRole('button', { name: 'Book' });
     await waitFor(() => expect(book).toBeEnabled());
     await userEvent.click(book);
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'This slot was just booked.',
+    vi.mocked(useApplication).mockReturnValue({
+      ...useApplication(),
+      revision: 1,
+    });
+    rerender(
+      <BookingDialog
+        selection={{ startAt, endAt: startAt + SLOT_MS, resourceId: 'room-1' }}
+        onClose={onClose}
+      />,
+    );
+    await waitFor(() =>
+      expect(screen.getByText(/#7 · Room 1 · owner@example.com/)).toBeVisible(),
     );
     expect(screen.getByText(/#7 · Room 1 · owner@example.com/)).toBeVisible();
     expect(screen.getByLabelText('Start date')).toHaveValue(
@@ -92,6 +127,56 @@ describe('booking submission', () => {
     );
     expect(onClose).not.toHaveBeenCalled();
     expect(book).toBeDisabled();
+    vi.mocked(app.checkAvailability).mockResolvedValue({
+      ok: true,
+      value: { isAvailable: true, conflicts: [] },
+    });
+    vi.mocked(useApplication).mockReturnValue({
+      ...useApplication(),
+      revision: 2,
+    });
+    rerender(
+      <BookingDialog
+        selection={{ startAt, endAt: startAt + SLOT_MS, resourceId: 'room-1' }}
+        onClose={onClose}
+      />,
+    );
+    await waitFor(() => expect(book).toBeEnabled());
+    expect(screen.queryByText(/#7 · Room 1/)).not.toBeInTheDocument();
+  });
+  it('rechecks local creation and cancellation revisions without losing the draft', async () => {
+    const selection = {
+      startAt,
+      endAt: startAt + SLOT_MS,
+      resourceId: 'room-1' as const,
+    };
+    const { rerender } = render(
+      <BookingDialog selection={selection} onClose={vi.fn()} />,
+    );
+    const book = screen.getByRole('button', { name: 'Book' });
+    await waitFor(() => expect(book).toBeEnabled());
+    await app.createBooking({
+      resourceId: 'room-1',
+      startAt,
+      endAt: startAt + SLOT_MS,
+    });
+    vi.mocked(useApplication).mockReturnValue({
+      ...useApplication(),
+      revision: 1,
+    });
+    rerender(<BookingDialog selection={selection} onClose={vi.fn()} />);
+    await waitFor(() => expect(screen.getByText(/#1 · Room 1/)).toBeVisible());
+    expect(book).toBeDisabled();
+    await app.cancelBooking(1);
+    vi.mocked(useApplication).mockReturnValue({
+      ...useApplication(),
+      revision: 2,
+    });
+    rerender(<BookingDialog selection={selection} onClose={vi.fn()} />);
+    await waitFor(() => expect(book).toBeEnabled());
+    expect(screen.getByLabelText('Start date')).toHaveValue(
+      toDateInput(startAt),
+    );
   });
   it('keeps transient quota failures retryable and reports them through a toast', async () => {
     const { notify } = await import('../lib/notifications');

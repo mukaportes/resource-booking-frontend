@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -34,13 +34,16 @@ export default function BookingCalendar({
     api?.changeView(state.view === 'day' ? 'timeGridDay' : 'timeGridWeek');
     api?.gotoDate(state.date);
   }, [state.view, state.date]);
+  const owners = useMemo(
+    () => new Map(users.map((user) => [user.userId, user.email])),
+    [users],
+  );
   const events = bookings.map((booking) => {
     const resource = RESOURCES.find((item) => item.id === booking.resourceId);
     const owner =
       booking.userId === userId
         ? 'You'
-        : (users.find((item) => item.userId === booking.userId)?.email ??
-          'Unknown owner');
+        : (owners.get(booking.userId) ?? 'Unknown owner');
     return {
       id: String(booking.id),
       title: `${resource?.name} · ${owner}`,

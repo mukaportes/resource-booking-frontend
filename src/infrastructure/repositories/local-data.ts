@@ -44,12 +44,38 @@ export interface Snapshot {
 export class LocalData {
   readonly local: SafeStorage;
   readonly session: SafeStorage;
+  readOnly = false;
+  private recoveredSession: string | null = null;
+  private sessionReset = false;
+  private cached: { raw: (string | null)[]; snapshot: Snapshot } | null = null;
+
+  assertWritable() {
+    if (this.readOnly)
+      throw storageError(
+        'STORAGE_QUOTA_EXCEEDED',
+        'Storage is full. Export your data, free site storage capacity, then retry storage. The workspace is read-only.',
+      );
+  }
   constructor(localStorage: Storage, sessionStorage: Storage) {
     this.local = new SafeStorage(localStorage);
     this.session = new SafeStorage(sessionStorage);
   }
 
   read(recoverSequence = false): Snapshot {
+    // Compare raw values even on command reads: other tabs can change storage before events arrive.
+    const raw = [
+      STORAGE_KEYS.users,
+      STORAGE_KEYS.bookings,
+      STORAGE_KEYS.sequence,
+    ].map((key) => this.local.raw(key));
+    if (
+      this.cached &&
+      raw.every((value, index) => value === this.cached?.raw[index]) &&
+      (!recoverSequence ||
+        raw[2] !== null ||
+        this.cached.snapshot.bookings.length === 0)
+    )
+      return this.cached.snapshot;
     const users = this.local.read(STORAGE_KEYS.users, usersSchema, {
       schemaVersion: 1,
       items: [],
@@ -69,16 +95,15 @@ export class LocalData {
       { schemaVersion: 1, lastIssuedId: maxId },
     ).lastIssuedId;
     if (lastIssuedId < maxId) this.corrupted(STORAGE_KEYS.sequence);
+    const userIds = new Set(users.map((user) => user.userId));
     if (
-      new Set(users.map((user) => user.userId)).size !== users.length ||
+      userIds.size !== users.length ||
       new Set(users.map((user) => user.email)).size !== users.length
     )
       this.corrupted(STORAGE_KEYS.users);
     if (
       new Set(bookings.map((booking) => booking.id)).size !== bookings.length ||
-      bookings.some(
-        (booking) => !users.some((user) => user.userId === booking.userId),
-      )
+      bookings.some((booking) => !userIds.has(booking.userId))
     )
       this.corrupted(STORAGE_KEYS.bookings);
     if (recoverSequence && missingSequence && bookings.length > 0) {
@@ -90,7 +115,14 @@ export class LocalData {
         JSON.stringify({ schemaVersion: 1, lastIssuedId }),
       );
     }
-    return { users, bookings, lastIssuedId };
+    // Cached records must never be writable through a consumer's read model.
+    users.forEach(Object.freeze);
+    bookings.forEach(Object.freeze);
+    Object.freeze(users);
+    Object.freeze(bookings);
+    const snapshot = Object.freeze({ users, bookings, lastIssuedId });
+    this.cached = { raw, snapshot };
+    return snapshot;
   }
 
   private corrupted(key: string): never {
@@ -107,16 +139,23 @@ export class LocalData {
     try {
       return sessionEnvelopeSchema.parse(JSON.parse(raw)).session.userId;
     } catch {
-      this.corrupted(STORAGE_KEYS.session);
+      this.recoveredSession = raw;
+      if (!this.readOnly) this.session.write(STORAGE_KEYS.session, null);
+      this.sessionReset = true;
+      return null;
     }
   }
 
   currentUser(users: User[]): { user: User | null; sessionReset: boolean } {
     const userId = this.sessionUserId();
-    if (userId === null) return { user: null, sessionReset: false };
+    if (userId === null) {
+      const sessionReset = this.sessionReset;
+      this.sessionReset = false;
+      return { user: null, sessionReset };
+    }
     const user = users.find((candidate) => candidate.userId === userId);
-    if (user) return { user, sessionReset: false };
-    this.session.write(STORAGE_KEYS.session, null);
+    if (user) return { user: { ...user }, sessionReset: false };
+    if (!this.readOnly) this.session.write(STORAGE_KEYS.session, null);
     return { user: null, sessionReset: true };
   }
 
@@ -145,7 +184,8 @@ export class LocalData {
         [STORAGE_KEYS.users]: this.local.raw(STORAGE_KEYS.users),
         [STORAGE_KEYS.bookings]: this.local.raw(STORAGE_KEYS.bookings),
         [STORAGE_KEYS.sequence]: this.local.raw(STORAGE_KEYS.sequence),
-        [STORAGE_KEYS.session]: this.session.raw(STORAGE_KEYS.session),
+        [STORAGE_KEYS.session]:
+          this.recoveredSession ?? this.session.raw(STORAGE_KEYS.session),
       },
       null,
       2,

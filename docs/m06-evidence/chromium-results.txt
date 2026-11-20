@@ -1,0 +1,27 @@
+
+> resource-booking-frontend@0.1.0 test:e2e
+> playwright test --workers=2
+
+
+Running 14 tests using 2 workers
+
+(node:76364) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:76363) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 [chromium] › e2e/audit-remediation.spec.ts:81:3 › native local-time input integrity › persists the browser-native earlier repeated hour and explains its resolved offset (1.4s)
+  ✓   1 [chromium] › e2e/audit-remediation.spec.ts:42:3 › native local-time input integrity › rejects the spring-forward gap without any write or consumed ID, then round trips a valid local booking (1.9s)
+  ✓   3 [chromium] › e2e/audit-remediation.spec.ts:111:1 › primary keyboard booking retains the viewed day/resource, today rounds forward and past-day entry is explained (911ms)
+  ✓   4 [chromium] › e2e/audit-remediation.spec.ts:140:1 › malformed session recovers through identification while healthy history and sequence remain byte-for-byte intact (925ms)
+  ✓   5 [chromium] › e2e/audit-remediation.spec.ts:164:1 › startup quota allows inspection/export, gates writes and enables retry without losing data at 360px (1.5s)
+  ✓   6 [chromium] › e2e/audit-remediation.spec.ts:230:1 › external occupation and cancellation refresh advisory availability without changing the draft (1.8s)
+  ✓   7 [chromium] › e2e/audit-remediation.spec.ts:292:1 › history renders bounded pages, retains records and supplies only overlapping calendar events (1.1s)
+  ✓   8 [chromium] › e2e/booking-flows.spec.ts:49:1 › login gate rejects invalid email, blocks Escape and restores the tab session (1.0s)
+  ✓  10 [chromium] › e2e/booking-flows.spec.ts:142:1 › non-owners see read-only details and shared URL filters restore after reload (1.1s)
+  ✓  11 [chromium] › e2e/booking-flows.spec.ts:172:1 › corrupted storage stays intact until export and typed reset (437ms)
+  ✓  12 [chromium] › e2e/booking-flows.spec.ts:200:1 › blocked browser storage opens a blocking explanation (242ms)
+  ✓   9 [chromium] › e2e/booking-flows.spec.ts:76:1 › booking conflict, adjacent interval, confirmed cancellation and IDs survive reload (2.6s)
+  ✓  13 [chromium] › e2e/booking-flows.spec.ts:220:1 › 360px Atlas defaults to day, scrolls cards locally and exposes keyboard filters (1.1s)
+  ✓  14 [chromium] › e2e/booking-flows.spec.ts:274:1 › dragging a future calendar interval opens a prefilled booking (1.8s)
+
+  14 passed (10.2s)
