@@ -1,0 +1,224 @@
+.deck-caption,
+.resource-card-top,
+.filter-actions,
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.deck-caption p {
+  font-size: 12px;
+}
+.resource-card-top {
+  width: 100%;
+}
+.resource-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.resource-filter fieldset {
+  border: 0;
+  margin: 16px 0;
+  padding: 0;
+}
+.resource-filter legend {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin-bottom: 12px;
+}
+.filter-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin: 10px 0;
+}
+.filter-check input {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+}
+.schedule-section {
+  min-width: 0;
+}
+.schedule-section > h2 {
+  margin: 7px 0 15px;
+}
+.schedule-toolbar {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 20px;
+}
+.toolbar-row {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.scope-control .input {
+  width: auto;
+  font-size: 12px;
+}
+.view-switch {
+  display: flex;
+  background: var(--subtle-surface, #f3f7fa);
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.calendar-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  --fc-border-color: var(--border);
+  --fc-today-bg-color: #e4eff755;
+  --fc-now-indicator-color: var(--primary);
+  font-size: 12px;
+  background: var(--surface, #fff);
+}
+.calendar-panel .fc-col-header-cell {
+  background: var(--subtle-surface, #f3f7fa);
+  padding: 12px 0;
+}
+.calendar-panel .fc-timegrid-slot {
+  height: 32px;
+}
+.calendar-panel .fc-timegrid-slot-label {
+  font-size: 10px;
+  color: var(--muted-foreground);
+}
+.calendar-event {
+  padding: 3px;
+  display: grid;
+  font-size: 10px;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.calendar-event strong {
+  font-weight: 600;
+  white-space: normal;
+}
+.calendar-panel .fc-event {
+  cursor: pointer;
+  border-radius: 5px;
+  color: var(--foreground);
+  border-left-width: 3px;
+}
+.calendar-panel .fc-event:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.calendar-panel .cancelled-event {
+  background: var(--subtle-surface) !important;
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+.calendar-panel .past-day {
+  background: #6275830a;
+}
+.empty-range {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  padding: 10px;
+  text-align: center;
+}
+.owner-label {
+  display: block;
+  color: var(--primary);
+  font-weight: 700;
+}
+.booking-table th {
+  white-space: nowrap;
+}
+.booking-table td {
+  vertical-align: top;
+}
+.booking-table .cancelled {
+  color: #627583;
+  background: #edf1f4;
+}
+.conflict-list {
+  padding-left: 18px;
+  display: grid;
+  gap: 12px;
+}
+.availability.unavailable {
+  background: #fff0ec;
+  color: #8e382a;
+}
+.filters-sheet {
+  max-width: 380px;
+}
+.resource-card small {
+  line-height: 1.5;
+}
+.calendar-skeleton {
+  min-height: 420px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #f3f7fa, #e4eff7, #f3f7fa);
+  background-size: 200% 100%;
+  animation: skeleton 2s infinite;
+}
+.field-row label {
+  display: grid;
+  gap: 6px;
+}
+.field-row .input {
+  min-width: 0;
+  width: 100%;
+}
+@keyframes skeleton {
+  to {
+    background-position: -200% 0;
+  }
+}
+@media (max-width: 760px) {
+  .toolbar-row {
+    gap: 5px;
+  }
+  .schedule-toolbar .button {
+    font-size: 11px;
+  }
+  .deck-caption {
+    align-items: flex-start;
+  }
+  .resource-card-top {
+    min-height: 25px;
+  }
+  .filters-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: auto;
+    bottom: 0;
+    transform: none;
+    max-height: 100dvh;
+    border-radius: 14px 0 0 14px;
+    width: min(340px, 90vw);
+  }
+  .calendar-panel {
+    font-size: 10px;
+  }
+  .calendar-panel .fc-timegrid-axis {
+    width: 40px;
+  }
+  .calendar-panel .fc-timegrid-slot-label {
+    font-size: 9px;
+  }
+  .view-switch {
+    flex-shrink: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .calendar-skeleton {
+    animation: none;
+  }
+}
+
+.calendar-panel .fc-event-main {
+  color: inherit;
+}
